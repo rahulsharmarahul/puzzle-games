@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Puzzle Zone",
   "short_name": "Puzzle Zone",
-  "description": "Six free games, daily puzzles and same-device multiplayer. Play offline with your family.",
+  "description": "Ten free games, daily puzzles and family multiplayer. Play offline or together across devices.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

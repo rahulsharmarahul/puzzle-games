@@ -44,7 +44,7 @@ export default {
         }
         const roomCode=path.split('/')[2],secret=token();
         const result=await env.ROOMS.get(env.ROOMS.idFromName(roomCode)).fetch('https://internal/join',{method:'POST',body:JSON.stringify({input,tokenHash:await digest(secret)})});
-        const data=await result.json();return cors(json(result.ok?{...data,token:secret,seat:1}:data,result.status));
+        const data=await result.json();return cors(json(result.ok?{...data,token:secret,seat:data.seat??1}:data,result.status));
       }
       const match=path.match(/^\/rooms\/([A-Z2-9]{8})\/socket$/);
       if(match&&request.headers.get('Upgrade')?.toLowerCase()==='websocket')return await env.ROOMS.get(env.ROOMS.idFromName(match[1])).fetch(request);
@@ -58,17 +58,17 @@ export class GameRoom extends DurableObject {
     super(ctx,env);this.ctx=ctx;this.room=null;this.keys=[];
     ctx.blockConcurrencyWhile(async()=>{const saved=await ctx.storage.get('room');if(saved){this.room=saved.room;this.keys=saved.keys;}});
   }
-  presence(){return [0,1].map(seat=>this.ctx.getWebSockets(String(seat)).some(ws=>ws.readyState===1));}
+  presence(){return (this.room?.players||[null,null]).map((_,seat)=>this.ctx.getWebSockets(String(seat)).some(ws=>ws.readyState===1));}
   async persist(room=this.room){await this.ctx.storage.put('room',{room,keys:this.keys});}
-  snapshot(){return publicRoom(this.room,this.presence());}
-  broadcast(){if(!this.room)return;const payload=JSON.stringify({type:'state',room:this.snapshot()});for(const ws of this.ctx.getWebSockets())try{if(ws.readyState===1)ws.send(payload);}catch{/* socket close is handled separately */}}
+  snapshot(seat=null){return publicRoom(this.room,this.presence(),Date.now(),seat);}
+  broadcast(){if(!this.room)return;for(const ws of this.ctx.getWebSockets())try{if(ws.readyState===1)ws.send(JSON.stringify({type:'state',room:this.snapshot(ws.deserializeAttachment().seat)}));}catch{/* socket close is handled separately */}}
   async fetch(request) {
     const path=new URL(request.url).pathname;
     if(path==='/limit') {
       return this.ctx.blockConcurrencyWhile(async()=>{const input=await body(request),now=Date.now(),result=rateLimit(await this.ctx.storage.get('limit'),input.kind,now);await this.ctx.storage.put('limit',result.next);await this.ctx.storage.setAlarm(now+3700000);return json({ok:result.ok,error:result.error,retryAfter:result.retryAfter},result.ok?200:429);});
     }
     if(path==='/create'||path==='/join') {
-      return this.ctx.blockConcurrencyWhile(async()=>{try{const data=await body(request);if(path==='/create'){if(this.room)return json({error:'Room already exists.'},409);this.room=createRoom(data.code,data.input);this.keys=[data.tokenHash,null];await this.ctx.storage.setAlarm(this.room.expires);}else{if(!this.room)return json({error:'Room not found. Check the code.'},404);joinRoom(this.room,data.input);this.keys[1]=data.tokenHash;}await this.persist();this.broadcast();return json({code:this.room.code,room:this.snapshot()},201);}catch(error){return json({error:error.message},400);}});
+      return this.ctx.blockConcurrencyWhile(async()=>{try{const data=await body(request);let seat=0;if(path==='/create'){if(this.room)return json({error:'Room already exists.'},409);this.room=createRoom(data.code,data.input);this.keys=[data.tokenHash,...Array(this.room.players.length-1).fill(null)];await this.ctx.storage.setAlarm(this.room.expires);}else{if(!this.room)return json({error:'Room not found. Check the code.'},404);seat=joinRoom(this.room,data.input);this.keys[seat]=data.tokenHash;}await this.persist();this.broadcast();return json({code:this.room.code,seat,room:this.snapshot(seat)},201);}catch(error){return json({error:error.message},400);}});
     }
     if(!this.room||Date.now()>=this.room.expires)return json({error:'Room expired or not found.'},404);
     const protocols=(request.headers.get('Sec-WebSocket-Protocol')||'').split(',').map(s=>s.trim());
@@ -91,13 +91,13 @@ export class GameRoom extends DurableObject {
       let message;
       try {
         message=JSON.parse(raw);
-        if(message.type==='sync'){ws.send(JSON.stringify({type:'state',room:this.snapshot()}));return;}
+        if(message.type==='sync'){ws.send(JSON.stringify({type:'state',room:this.snapshot(attachment.seat)}));return;}
         // A failed action never changes the live or persisted room.
         const next=structuredClone(this.room);
         const changed=applyRoomAction(next,attachment.seat,message,this.presence().every(Boolean));
         if(changed){await this.persist(next);this.room=next;this.broadcast();}
         ws.send(JSON.stringify({type:'ack',id:message.id}));
-      }catch(error){ws.send(JSON.stringify({type:'error',id:message?.id,error:error.message}));if(this.room)ws.send(JSON.stringify({type:'state',room:this.snapshot()}));}
+      }catch(error){ws.send(JSON.stringify({type:'error',id:message?.id,error:error.message}));if(this.room)ws.send(JSON.stringify({type:'state',room:this.snapshot(attachment.seat)}));}
     });
   }
   async webSocketClose(ws,code,reason){try{ws.close(code===1006?1000:code,reason);}catch{}if(this.room)await this.ctx.blockConcurrencyWhile(async()=>{clockRoom(this.room,this.presence().every(Boolean));await this.persist();this.broadcast();});}

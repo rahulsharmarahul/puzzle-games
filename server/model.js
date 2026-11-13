@@ -4,8 +4,9 @@ import { createWordle, guessWord, answerFor, wordFeedback } from '../src/engines
 import { createGame, act, complete, formatTime } from '../src/lib/game.js';
 import { petExclusions } from '../src/engines/petdoku.js';
 import { createFlight, stepFlight, flight } from '../src/engines/flappy.js';
+import {tableGames,createTable,tableAction,tableView,maxPlayers} from '../src/engines/table.js';
 
-export const games = ['sudoku','petdoku','wordle','checkers','dots','flappy'];
+export const games = ['sudoku','petdoku','wordle','checkers','dots','flappy',...tableGames];
 export const ROOM_LIFETIME = 6 * 60 * 60 * 1000;
 export const MAX_FLIGHT_TICKS = 7200;
 export function player(input) {
@@ -17,27 +18,30 @@ export function createRoom(code, input, now=Date.now()) {
   const seed=crypto.randomUUID();
   const difficulty=['easy','medium','hard','expert'].includes(input.difficulty)?input.difficulty:'easy';
   const size=Number.isInteger(input.size)&&input.size>=2&&input.size<=6?input.size:4;
-  const match=input.game==='checkers'?createCheckers():input.game==='dots'?createDots(size):input.game==='wordle'?createWordle(seed):input.game==='flappy'?{round:0,scores:[],roundStarted:null,status:'playing',winner:null}:createGame(input.game,difficulty,seed);
-  return {version:1,code,game:input.game,seed,players:[player(input),null],phase:'waiting',revision:0,match,turn:0,contributions:[0,0],winner:null,paused:false,elapsed:0,clock:null,created:now,expires:now+ROOM_LIFETIME,recent:[[],[]],note:'Waiting for player two.'};
+  const capacity=Number.isInteger(input.playerCount)&&input.playerCount>=2&&input.playerCount<=maxPlayers(input.game)?input.playerCount:2;
+  const match=tableGames.includes(input.game)?createTable(input.game,capacity,seed):input.game==='checkers'?createCheckers():input.game==='dots'?createDots(size):input.game==='wordle'?createWordle(seed):input.game==='flappy'?{round:0,scores:[],roundStarted:null,status:'playing',winner:null}:createGame(input.game,difficulty,seed);
+  return {version:1,code,game:input.game,seed,capacity,players:[player(input),...Array(capacity-1).fill(null)],phase:'waiting',revision:0,match,turn:0,contributions:Array(capacity).fill(0),winner:null,paused:false,elapsed:0,clock:null,created:now,expires:now+ROOM_LIFETIME,recent:Array.from({length:capacity},()=>[]),note:'Waiting for the other players.'};
 }
 export function joinRoom(room,input,now=Date.now()) {
   if (now>=room.expires) throw Error('This room has expired. Create a new one.');
-  if (room.players[1]) throw Error('Both seats are taken. Reopen this room in the browser you joined with.');
-  room.players[1]=player(input);room.phase='playing';room.revision++;room.note='Player two joined. Connect both devices to begin.';
+  const seat=room.players.indexOf(null);
+  if(seat<0)throw Error(room.players.length===2?'Both seats are taken. Reopen this room in the browser you joined with.':'All seats are taken. Rejoin from your original browser.');
+  room.players[seat]=player(input);room.phase=room.players.every(Boolean)?'playing':'waiting';room.revision++;room.note=`Player ${seat+1} joined. Connect all players to begin.`;return seat;
 }
-export function activeTurn(room) {return ['checkers','dots','wordle'].includes(room.game)?room.match.turn:room.game==='flappy'?room.match.round:room.turn;}
+export function activeTurn(room) {return ['checkers','dots','wordle',...tableGames].includes(room.game)?room.match.turn:room.game==='flappy'?room.match.round:room.turn;}
 export function clockRoom(room,connected,now=Date.now()) {
   if(room.clock!==null){room.elapsed+=Math.max(0,now-room.clock);room.clock=null;}
   if(room.phase==='playing'&&!room.paused&&connected)room.clock=now;
 }
-export function publicRoom(room,presence=[false,false],now=Date.now()) {
+export function publicRoom(room,presence=room.players.map(()=>false),now=Date.now(),seat=null) {
   const m=room.match;let state;
-  if(room.game==='wordle')state={guesses:m.guesses,feedback:m.guesses.map(w=>wordFeedback(answerFor(m.seed),w)),turn:m.turn,status:m.status,winner:m.winner,...(m.status==='complete'?{answer:answerFor(m.seed)}:{})};
+  if(tableGames.includes(room.game))state=tableView(room.game,m,seat);
+  else if(room.game==='wordle')state={guesses:m.guesses,feedback:m.guesses.map(w=>wordFeedback(answerFor(m.seed),w)),turn:m.turn,status:m.status,winner:m.winner,...(m.status==='complete'?{answer:answerFor(m.seed)}:{})};
   else if(['sudoku','petdoku'].includes(room.game))state={size:m.size,difficulty:m.difficulty,givens:m.givens,board:m.board,notes:m.notes,mistakes:m.mistakes,hints:m.hints,canUndo:m.undo.length>0,canRedo:m.redo.length>0,status:m.status,invalid:m.board.flatMap((v,i)=>v&&(room.game==='sudoku'?v!==m.solution[i]:v===2&&!m.solution.includes(i))?[i]:[]),...(room.game==='petdoku'?{regions:m.regions,excluded:[...petExclusions(m.board,m.regions,m.size,m.solution)],correctPets:m.solution.filter(i=>m.board[i]===2)}:{})};
   else if(room.game==='checkers'){const {positions,...rest}=m;state=rest;}
   else if(room.game==='flappy')state={...m,course:room.seed,maxTicks:MAX_FLIGHT_TICKS};
   else state=m;
-  return {protocol:1,code:room.code,game:room.game,players:room.players,phase:room.phase,revision:room.revision,state,turn:activeTurn(room),contributions:room.contributions,winner:room.winner,paused:room.paused,elapsed:room.elapsed+(room.clock===null?0:Math.max(0,now-room.clock)),presence,created:room.created,expires:room.expires,note:room.note};
+  return {protocol:1,code:room.code,game:room.game,capacity:room.players.length,players:room.players,phase:room.phase,revision:room.revision,state,turn:activeTurn(room),contributions:room.contributions,winner:room.winner,paused:room.paused,elapsed:room.elapsed+(room.clock===null?0:Math.max(0,now-room.clock)),presence,created:room.created,expires:room.expires,note:room.note};
 }
 export function replayFlight(seed, flaps, ticks) {
   if(!Number.isInteger(ticks)||ticks<1||ticks>MAX_FLIGHT_TICKS||!Array.isArray(flaps)||flaps.length>1000||flaps.some((v,i)=>!Number.isInteger(v)||v<0||v>=ticks||(i&&v<=flaps[i-1])))throw Error('Invalid flight input.');
@@ -56,7 +60,7 @@ function finishFlight(room,score) {
   else {m.status='complete';m.winner=m.scores[0]===m.scores[1]?'draw':m.scores[0]>m.scores[1]?0:1;room.phase='complete';room.winner=m.winner;room.note='Both flights are finished.';}
 }
 export function applyRoomAction(room, seat, message, connected=true, now=Date.now()) {
-  if(!Number.isInteger(seat)||seat<0||seat>1||!room.players[seat])throw Error('This seat is not available.');
+  if(!Number.isInteger(seat)||seat<0||seat>=room.players.length||!room.players[seat])throw Error('This seat is not available.');
   if(!message||typeof message.id!=='string'||message.id.length>80||!message.id)throw Error('Invalid action identifier.');
   if(room.recent[seat].includes(message.id))return false;
   if(now>=room.expires)throw Error('This room has expired.');
@@ -66,15 +70,22 @@ export function applyRoomAction(room, seat, message, connected=true, now=Date.no
   if(room.phase!=='playing')throw Error('This match is not in progress.');
   clockRoom(room,false,now);
   if(action.type==='resign') {
-    room.phase='complete';room.winner=['checkers','dots','flappy'].includes(room.game)?1-seat:'lost';room.match.status='complete';room.match.winner=room.winner;room.note=`${room.players[seat].name} ended the match.`;
+    room.phase='complete';room.winner=room.players.length>2?'draw':['checkers','dots','flappy',...tableGames].includes(room.game)?1-seat:'lost';room.match.status='complete';room.match.winner=room.winner;room.note=`${room.players[seat].name} ended the match.${room.players.length>2?' Multiplayer match cancelled as a draw.':''}`;
   } else if(action.type==='pause'&&room.game!=='flappy') {
     room.paused=!room.paused;room.note=room.paused?'The shared game is paused.':'The shared game resumed.';
   } else {
     if(!connected)throw Error('Wait for both players to reconnect.');
     if(room.paused)throw Error('Resume the shared game first.');
-    if(activeTurn(room)!==seat)throw Error('It is the other player’s turn.');
+    const seaSetup=room.game==='sea'&&!room.match.ready[seat]&&['sea-place','sea-auto','sea-reset','sea-ready'].includes(action.type);
+    if(activeTurn(room)!==seat&&!seaSetup)throw Error('It is the other player’s turn.');
     let next=room.match;
-    if(room.game==='checkers'&&action.type==='checker')next=moveChecker(room.match,action.from,action.to);
+    if(tableGames.includes(room.game)){
+      const allowed={ludo:['ludo-roll','ludo-move'],uno:['uno-play','uno-draw','uno-pass','uno-call'],trump:['trump-play'],sea:['sea-place','sea-auto','sea-reset','sea-ready','sea-fire']};
+      if(!allowed[room.game].includes(action.type))throw Error('Unsupported game move.');
+      if(room.game==='sea'&&action.type==='sea-auto'&&(!Number.isInteger(action.shuffle)||action.shuffle<0||action.shuffle>1000000))throw Error('Invalid fleet shuffle.');
+      next=tableAction(room.game,room.match,action,seat);
+    }
+    else if(room.game==='checkers'&&action.type==='checker')next=moveChecker(room.match,action.from,action.to);
     else if(room.game==='dots'&&action.type==='edge')next=drawEdge(room.match,action.axis,action.index);
     else if(room.game==='wordle'&&action.type==='guess') {
       if(typeof action.word!=='string'||action.word.length>20)throw Error('Enter a five-letter word.');

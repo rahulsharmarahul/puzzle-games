@@ -1,9 +1,9 @@
 import { clubGames } from './club';
 export function validOnlineResults(value) {
-  return value&&value.stats&&typeof value.stats==='object'&&!Array.isArray(value.stats)&&Object.entries(value.stats).every(([game,s])=>Object.hasOwn(clubGames,game)&&s&&['played','wins','losses','draws'].every(k=>Number.isInteger(s[k])&&s[k]>=0)&&s.wins+s.losses+s.draws===s.played)&&Array.isArray(value.history)&&value.history.length<=500&&value.history.every(h=>h&&typeof h.id==='string'&&Object.hasOwn(clubGames,h.game)&&typeof h.code==='string'&&/^[A-Z2-9]{8}$/.test(h.code)&&Array.isArray(h.players)&&h.players.length===2&&h.players.every(n=>typeof n==='string'&&n.length<=30)&&[0,1].includes(h.seat)&&['won','lost','draw'].includes(h.result)&&Number.isFinite(h.elapsed)&&h.elapsed>=0&&typeof h.date==='string');
+  return value&&value.stats&&typeof value.stats==='object'&&!Array.isArray(value.stats)&&Object.entries(value.stats).every(([game,s])=>Object.hasOwn(clubGames,game)&&s&&['played','wins','losses','draws'].every(k=>Number.isInteger(s[k])&&s[k]>=0)&&s.wins+s.losses+s.draws===s.played)&&Array.isArray(value.history)&&value.history.length<=500&&value.history.every(h=>h&&typeof h.id==='string'&&Object.hasOwn(clubGames,h.game)&&typeof h.code==='string'&&/^[A-Z2-9]{8}$/.test(h.code)&&Array.isArray(h.players)&&h.players.length>=2&&h.players.length<=4&&h.players.every(n=>typeof n==='string'&&n.length<=30)&&Number.isInteger(h.seat)&&h.seat>=0&&h.seat<h.players.length&&['won','lost','draw'].includes(h.result)&&Number.isFinite(h.elapsed)&&h.elapsed>=0&&typeof h.date==='string');
 }
 export function recordOnlineResult(data,room,seat) {
-  if(room.phase!=='complete'||![0,1].includes(seat))return data;
+  if(room.phase!=='complete'||(!Number.isInteger(seat)||seat<0||seat>=room.players.length))return data;
   const id=`${room.code}:${room.created}`;
   const online=structuredClone(data.online||{history:[],stats:{}});
   if(online.history.some(h=>h.id===id))return data;

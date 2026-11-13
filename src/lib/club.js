@@ -1,9 +1,14 @@
+import {tableGames,createTable,maxPlayers,validTable} from '../engines/table';
 import { createCheckers } from '../engines/checkers';
 import { createDots } from '../engines/dots';
 import { createWordle, guessWord } from '../engines/wordle';
 import { createFlight } from '../engines/flappy';
 import { createGame } from './game';
 export const clubGames = {
+  ludo:{name:'Ludo',symbol:'⚄',tag:'ROLL. RACE. REACH HOME.',description:'Bring four tokens home. Race friends, capture rivals and find the safe squares.',modes:'Computer or 2–4 players'},
+  uno:{name:'UNO',symbol:'➕',tag:'COLOUR. MATCH. SAY UNO.',description:'Match colours and symbols, play action cards and empty your hand first.',modes:'Computer or 2–4 players'},
+  trump:{name:'Trump Tricks',symbol:'♠',tag:'FOLLOW SUIT. PLAY YOUR TRUMP.',description:'Seven cards, seven tricks. Choose your moment to trump and take the lead.',modes:'Computer or 2–4 players'},
+  sea:{name:'Sea Battle',symbol:'⚓',tag:'HIDE YOUR FLEET. FIND THEIRS.',description:'Position your fleet, call your shots and sink the opposing ships.',modes:'Computer or 2 players'},
   flappy:{name:'Flappy Jump',symbol:'🐤',tag:'TIMING & REFLEXES',description:'Tap, hop and glide through the gaps. How far can your little bird fly?',modes:'Solo or two-player score challenge'},
   wordle:{name:'Wordle',symbol:'Aa',tag:'FIVE LETTERS. SIX GUESSES.',description:'Find the hidden word, one colourful clue at a time. A fresh word every day.',modes:'Solo or cooperative guessing'},
   checkers:{name:'Checkers',symbol:'●',tag:'THINK A MOVE AHEAD',description:'Jump, capture and crown your kings. A classic duel across the board.',modes:'Play the computer or a friend'},
@@ -14,8 +19,8 @@ export const clubGames = {
 export const emptyClub = () => ({sessions:{},history:[],stats:{},daily:{}});
 export function createSession(game,mode,players,{difficulty='easy',size=4,seed=crypto.randomUUID(),daily=null}={}) {
   if(!Object.hasOwn(clubGames,game))throw Error('Unknown game');
-  const state=game==='checkers' ? createCheckers() : game==='dots' ? createDots(size) : game==='wordle' ? createWordle(seed) : game==='flappy' ? {flight:createFlight(seed),round:0,scores:[],status:'playing',winner:null} : createGame(game,difficulty,seed);
-  return {id:crypto.randomUUID(),game,mode,players:structuredClone(players),seed,daily,state,turn:0,contributions:[0,0],created:new Date().toISOString(),status:'playing',winner:null};
+  const state=tableGames.includes(game)?createTable(game,players.length,seed):game==='checkers' ? createCheckers() : game==='dots' ? createDots(size) : game==='wordle' ? createWordle(seed) : game==='flappy' ? {flight:createFlight(seed),round:0,scores:[],status:'playing',winner:null} : createGame(game,difficulty,seed);
+  return {id:crypto.randomUUID(),game,mode,players:structuredClone(players),seed,daily,state,turn:0,contributions:Array(players.length).fill(0),created:new Date().toISOString(),status:'playing',winner:null};
 }
 export function updateClub(data,session) {
   const club=structuredClone(data.club || emptyClub());
@@ -40,10 +45,11 @@ function validFlight(f) {
   return f && typeof f.seed==='string' && finite(f.y,-1000,2000) && finite(f.vy,-2000,2000) && finite(f.distance,0,1e10) && integer(f.score,0,1e8) && finite(f.elapsed,0,1e8) && typeof f.alive==='boolean' && integer(f.nextPipe,3,1e8) && Array.isArray(f.pipes) && f.pipes.length===3 && f.pipes.every(p=>finite(p.x,0,1e11)&&finite(p.top,65,265)&&typeof p.scored==='boolean');
 }
 export function validSession(s,validPuzzle) {
-  if(!s || !Object.hasOwn(clubGames,s.game) || typeof s.id!=='string' || typeof s.seed!=='string' || s.seed.length>200 || !['solo','local'].includes(s.mode) || !['playing','complete'].includes(s.status) || !(s.winner===null || ['draw','team','lost',0,1].includes(s.winner)) || !Array.isArray(s.players) || s.players.length!==2 || !s.players.every(p=>p&&typeof p.id==='string'&&typeof p.name==='string'&&p.name.length<=30&&typeof p.avatar==='string'&&p.avatar.length<20) || !integer(s.turn,0,1) || !Array.isArray(s.contributions) || s.contributions.length!==2 || !s.contributions.every(n=>integer(n,0,1e8)) || typeof s.created!=='string' || !(s.daily===null||typeof s.daily==='string'&&s.daily.length<100)) return false;
+  if(!s || !Object.hasOwn(clubGames,s.game) || typeof s.id!=='string' || typeof s.seed!=='string' || s.seed.length>200 || !['solo','local'].includes(s.mode) || !['playing','complete'].includes(s.status) || !(s.winner===null || (['draw','team','lost'].includes(s.winner)||integer(s.winner,0,(s.players?.length||0)-1))) || !Array.isArray(s.players) || (s.players.length<2||s.players.length>maxPlayers(s.game)) || !s.players.every(p=>p&&typeof p.id==='string'&&typeof p.name==='string'&&p.name.length<=30&&typeof p.avatar==='string'&&p.avatar.length<20) || !integer(s.turn,0,s.players.length-1) || !Array.isArray(s.contributions) || s.contributions.length!==s.players.length || !s.contributions.every(n=>integer(n,0,1e8)) || typeof s.created!=='string' || !(s.daily===null||typeof s.daily==='string'&&s.daily.length<100)) return false;
   const st=s.state;
   if(s.daily!==null && (s.game!=='wordle'||!/^wordle-v1:\d{4}-\d{2}-\d{2}$/.test(s.daily)||s.seed!==s.daily))return false;
   if(!st || !['playing','complete'].includes(st.status) || st.status!==s.status || (!['sudoku','petdoku'].includes(s.game)&&st.winner!==s.winner))return false;
+  if(tableGames.includes(s.game))return validTable(s.game,st,s.players.length);
   if(['sudoku','petdoku'].includes(s.game)) return s.mode==='local' && st.game===s.game && validPuzzle({...st,status:'playing'});
   if(s.game==='checkers') return Array.isArray(st.board)&&st.board.length===64&&st.board.every((p,i)=>integer(p,-2,2)&&(!p||(Math.floor(i/8)+i%8)%2===1))&&integer(st.turn,0,1)&&(st.forced===null||integer(st.forced,0,63))&&integer(st.quiet,0,1e8)&&st.positions&&typeof st.positions==='object'&&Object.keys(st.positions).length<=1000&&Object.values(st.positions).every(n=>integer(n,1,3));
   if(s.game==='dots')return integer(st.size,2,6)&&['h','v','boxes'].every(k=>Array.isArray(st[k])&&st[k].length===(k==='boxes'?st.size**2:st.size*(st.size+1))&&st[k].every(v=>integer(v,-1,1)))&&integer(st.turn,0,1);
@@ -58,5 +64,5 @@ export function validSession(s,validPuzzle) {
 export function validClub(club,validPuzzle) {
   if(club?.daily!==undefined && (!club.daily || typeof club.daily!=='object' || Array.isArray(club.daily) || !Object.entries(club.daily).every(([key,id])=>/^wordle-v1:\d{4}-\d{2}-\d{2}:(solo|local)$/.test(key)&&typeof id==='string'&&id.length<100)))return false;
   if (club?.stats !== undefined && (!club.stats || typeof club.stats!=='object' || Array.isArray(club.stats) || !Object.entries(club.stats).every(([game,s])=>Object.hasOwn(clubGames,game)&&s&&['played','wins','losses','draws','bestScore'].every(k=>integer(s[k],0,1e12))&&s.wins+s.losses+s.draws===s.played)))return false;
-  return club && club.sessions && typeof club.sessions==='object' && !Array.isArray(club.sessions) && Object.entries(club.sessions).every(([key,s])=>s.game===key&&validSession(s,validPuzzle)) && Array.isArray(club.history)&&club.history.length<=500&&club.history.every(h=>h&&typeof h.id==='string'&&Object.hasOwn(clubGames,h.game)&&['solo','local'].includes(h.mode)&&typeof h.date==='string'&&Array.isArray(h.players)&&h.players.length===2&&h.players.every(p=>typeof p==='string'&&p.length<=30)&&(h.winner===null||['draw','team','lost',0,1].includes(h.winner))&&(h.scores===null||Array.isArray(h.scores)&&h.scores.length<=2&&h.scores.every(n=>integer(n,0,1e8))));
+  return club && club.sessions && typeof club.sessions==='object' && !Array.isArray(club.sessions) && Object.entries(club.sessions).every(([key,s])=>s.game===key&&validSession(s,validPuzzle)) && Array.isArray(club.history)&&club.history.length<=500&&club.history.every(h=>h&&typeof h.id==='string'&&Object.hasOwn(clubGames,h.game)&&['solo','local'].includes(h.mode)&&typeof h.date==='string'&&Array.isArray(h.players)&&h.players.length>=2&&h.players.length<=maxPlayers(h.game)&&h.players.every(p=>typeof p==='string'&&p.length<=30)&&(h.winner===null||(['draw','team','lost'].includes(h.winner)||integer(h.winner,0,h.players.length-1)))&&(h.scores===null||Array.isArray(h.scores)&&h.scores.length<=2&&h.scores.every(n=>integer(n,0,1e8))));
 }

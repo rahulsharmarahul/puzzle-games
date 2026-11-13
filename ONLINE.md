@@ -1,8 +1,8 @@
 # Different-device multiplayer
 
-The frontend stays on GitHub Pages. A separate **Cloudflare Worker + SQLite-backed Durable Objects** service synchronizes two-player rooms. It is designed for the Workers Free plan and uses no purchased domain, paid database, email login, Firebase or client-side deployment credentials.
+The frontend stays on GitHub Pages. A separate **Cloudflare Worker + SQLite-backed Durable Objects** service synchronizes 2-4-player rooms. It is designed for the Workers Free plan and uses no purchased domain, paid database, email login, Firebase or client-side deployment credentials.
 
-The backend is deployed at **https://puzzle-zone-multiplayer.rahulsharma-rahul.workers.dev**. All six games and the access checks passed two-client tests against that live endpoint. `public/multiplayer.json` contains this address. The frontend is published separately through the repository's GitHub Pages workflow; older installed versions need to apply the app's update before showing the online controls.
+The backend is deployed at **https://puzzle-zone-multiplayer.rahulsharma-rahul.workers.dev**. `public/multiplayer.json` contains this address. The frontend is published separately through the repository's GitHub Pages workflow; older installed versions need to apply the app's update before showing the online controls.
 
 ## Included play modes
 
@@ -39,14 +39,14 @@ For a local-only connection override, the Online rooms screen has **Connection s
 
 Signing into the Cloudflare dashboard does not sign the terminal into Wrangler; the browser authorization above is separate. No account password should be shared with the app or committed to Git. Wrangler manages its own authorization outside the project.
 
-## Play from two devices
+## Play from different devices
 
 1. Both players open the deployed Puzzle Zone website using their own local profiles.
 2. Player one opens **Online rooms** or a game's **Play online · Different devices** link.
 3. Select a game and tap **Create room**.
 4. Share **Copy invitation**, or send the eight-character room code.
 5. Player two opens that link (or enters the code under Join room), then taps **Join room**.
-6. Once both show Connected, take turns. The server prevents moves from the wrong player.
+6. Once all players show Connected, take turns. The server prevents moves from the wrong player.
 7. Either player can pause a shared non-flight game. Ending a competitive match resigns to the opponent; ending a cooperative game closes the challenge.
 
 Room codes provide guest access to the second seat. Share them only with your intended player. A seat remains reserved after joining; another tab on the same profile/browser can resume it, but a new tab replaces the old connection. A third player cannot take either seat. If a player loses their original browser data, create a new room instead of trying to reclaim the reserved seat.
@@ -88,7 +88,7 @@ npm run test:online
 npm run test:e2e
 ```
 
-`test:online` starts the production frontend preview and a local Cloudflare emulator, then tests two independent browser contexts, synchronized turns, reserved seats, rejected illegal moves, pause/resume, completion, verified flights, private-state filtering and origin restrictions. It uses a new ignored `.wrangler/tests-*` state directory per run so previous room limits do not contaminate tests. Ports 4173 and 8787 must be available. On Windows it uses installed Chrome; on other systems install Playwright Chromium first. `test:e2e` separately checks the original offline/same-device flows.
+`test:online` starts the production frontend preview and a local Cloudflare emulator, then tests two or three independent browser contexts, synchronized turns, reserved seats, rejected illegal moves, pause/resume, completion, verified flights, private-state filtering and origin restrictions. It uses a new ignored `.wrangler/tests-*` state directory per run so previous room limits do not contaminate tests. Ports 4173 and 8787 must be available. On Windows it uses installed Chrome; on other systems install Playwright Chromium first. `test:e2e` separately checks the original offline/same-device flows.
 
 ## Architecture and safeguards
 
@@ -102,10 +102,16 @@ Both players must be connected for ordinary moves. Clocks suspend while disconne
 
 Puzzle solutions, Sudoku undo snapshots, the unfinished Wordle answer/seed, and seat-token hashes are never sent in public room state. Verified flight inputs enforce the app's physics and timing bounds; this is a casual family game, **not bot-proof competitive anti-cheat**. Direct browser tampering can still reveal locally bundled solo puzzles and vocabulary; online rules do not make the standalone offline games tamper-proof.
 
-WebSockets authenticate through a subprotocol token rather than URL query parameters. Private tokens are not part of invitation links or logs. The server permits only configured web origins, rejects unknown rooms/seat tokens, reserves two seats, limits payload sizes, and applies conservative per-IP creation/join and per-connection message rates. Origin checks complement seat authentication; they do not authenticate arbitrary non-browser clients.
+WebSockets authenticate through a subprotocol token rather than URL query parameters. Private tokens are not part of invitation links or logs. The server permits only configured web origins, rejects unknown rooms/seat tokens, reserves the selected 2-4 seats, limits payload sizes, and applies conservative per-IP creation/join and per-connection message rates. Origin checks complement seat authentication; they do not authenticate arbitrary non-browser clients.
 
 ## Cost and availability
 
 This configuration uses SQLite Durable Objects, available on Workers Free. It uses hibernatable WebSockets and expires abandoned rooms to reduce idle work. Free quotas still apply to requests, compute and storage; when a free limit is reached, affected online operations can fail until the limit resets. Keep the account on **Workers Free** and do not enable paid products if zero billing is required. Nothing in the repository upgrades the account or configures a paid service. Solo and same-device games continue to work without this service.
 
 Official references: [Durable Objects pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/), [WebSocket hibernation](https://developers.cloudflare.com/durable-objects/best-practices/websockets/), [Wrangler commands](https://developers.cloudflare.com/workers/wrangler/commands/).
+
+## Four additional family games
+
+Ludo, UNO and Trump Tricks offer **2, 3 or 4 seats**; choose Number of players before creating the room. Sea Battle has two seats. Share the same invitation with every guest. Each guest gets a distinct reserved seat; all selected players must join and stay connected before moves are accepted. Existing two-seat rooms continue to work. Ending a match with three or four players cancels it for everyone as a draw; a two-player resignation awards the other player the win.
+
+Each authenticated socket receives a seat-specific snapshot on join, broadcast, reconnect and error recovery. UNO/Trump hands, draw decks, seeds and opposing Sea Battle fleets stay on the server. Only the seat's own hand or fleet and public information reach that device. All rule checks run on the server. See README for the exact family rule variants. Local match saves and online results for these games are included in Family progress synchronization and backups. Active online rooms rejoin using the original browser's reserved seat rather than a synced local session.

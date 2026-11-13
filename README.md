@@ -1,10 +1,10 @@
 # Puzzle Zone
 
-A free, mobile-first family game collection: Sudoku, Petdoku, Flappy Jump, Wordle, Checkers and Dots and Boxes, with local profiles, same-device multiplayer, saved sessions, statistics, backups and offline play. React, Vite, JavaScript and plain CSS. Solo and same-device play need no backend or accounts. Optional different-device multiplayer uses a separate Cloudflare Worker; no player email accounts, paid services, advertisements or remote fonts are required.
+A free, mobile-first family game collection: Sudoku, Petdoku, Flappy Jump, Wordle, Checkers, Dots and Boxes, Ludo, UNO, Trump Tricks and Sea Battle, with local profiles, same-device multiplayer, saved sessions, statistics, backups and offline play. React, Vite, JavaScript and plain CSS. Solo and same-device play need no backend or accounts. Optional different-device multiplayer uses a separate Cloudflare Worker; no player email accounts, paid services, advertisements or remote fonts are required.
 
 ## Play online from different devices
 
-Open **Online rooms**, select a game, and create a room. Send the invitation link or eight-character code to your friend, who joins from another device. Checkers and Dots and Boxes are competitive; Sudoku, Petdoku and Wordle are cooperative; Flappy Jump is a matching-course score challenge. Both players need internet. Existing solo and same-device modes remain available offline.
+Open **Online rooms**, select a game, and create a room. Send the invitation link or eight-character code to your friend, who joins from another device. Checkers, Dots and Boxes, Ludo, UNO, Trump Tricks and Sea Battle are competitive; Sudoku, Petdoku and Wordle are cooperative; Flappy Jump is a matching-course score challenge. All players need internet. Existing solo and same-device modes remain available offline.
 
 The configured service is `https://puzzle-zone-multiplayer.rahulsharma-rahul.workers.dev`, set in `public/multiplayer.json`. Deployment, local development, security, reconnection, room expiry and free-quota details are documented in **[ONLINE.md](ONLINE.md)**. The frontend must be pushed to GitHub Pages after changes to make the new online interface available there. Cloudflare backend changes are deployed separately with `npm run multiplayer:deploy`.
 
@@ -14,7 +14,7 @@ In **Family**, create a shared family on one device, then enter its private fami
 
 ## New games and same-device multiplayer
 
-The home page has six game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Every new game offers solo and two-player setup. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
+The home page has ten game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Each arcade game offers solo computer play or same-device multiplayer. Ludo, UNO and Trump Tricks support 2-4 players, including three-player family matches; Sea Battle supports two. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
 
 | Game | Solo | Same-device multiplayer |
 | --- | --- | --- |
@@ -24,6 +24,20 @@ The home page has six game cards. Sudoku and Petdoku keep their existing solo fl
 | Wordle | Five-letter English word, six guesses, daily or free play | Cooperative guessing; alternate submitted guesses and share six attempts |
 | Checkers | Basic computer opponent | Two players alternate moves on one board |
 | Dots and Boxes | Basic computer opponent | Two players draw edges; completing a box earns another turn |
+| Ludo | 1-3 computer opponents | 2-4 players race four tokens home |
+| UNO | 1-3 computer opponents | 2-4 players; private handoff between turns |
+| Trump Tricks | 1-3 computer opponents | 2-4 players; private handoff between turns |
+| Sea Battle | Computer opponent | Two players; private fleet setup and turns |
+
+**Ludo:** roll six to enter a token; sixes, captures and reaching home earn another roll. A third consecutive six loses that roll and passes the turn. Pairs block passing and landing, including your own pairs; marked stars protect tokens from capture. The home lane begins after 51 outer-track positions, and exact rolls bring each token home at progress 56. First to bring all four home wins. These are the displayed family rules; regional variants differ.
+
+**UNO:** independently drawn 108-card family version, seven cards each and a numeric opening discard. Match colour or value, or play a wild. Draw one and either play that card or pass; no stacking or draw-four challenges. Draw four is rejected when the hand has the current colour. Call UNO before playing from two cards to one; otherwise draw two automatically. Reverse acts as skip with two players. Draw actions penalize and skip the next player, including when the final card wins. First empty hand wins a single-hand match (no 500-point scoring). [Mattel rule reference](https://service.mattel.com/instruction_sheets/42003-Eng.pdf).
+
+**Trump Tricks:** a casual trick-taking variant, not a specific regional Trump game. Deal seven cards each from a standard deck, reveal the next card to set trump, and let player one lead. Follow suit when possible; otherwise any card is legal. Highest trump wins, or highest led-suit card if no trump was played. The winner leads next. After seven tricks the most tricks wins; a tie for highest score is a draw. No bidding or partnerships.
+
+**Sea Battle:** place straight ships of lengths 5, 4, 3, 3 and 2 on a 10x10 grid, manually or with Auto-place. Ships may touch but cannot overlap. Confirm locks your fleet. Players alternate one shot, including after a hit. Sink all five ships to win. Online fleet placement can happen independently; no shots until both confirm. The computer chooses targets from its own hit/miss history.
+
+Same-device UNO, Trump and Sea Battle hide the next hand/fleet behind **Pass to player -> Show my turn**. This is courtesy privacy on a shared device; local saves/backups contain the complete match. Online devices receive only their own hand/fleet, public counts and played cards, plus their shot results; hidden fleets are revealed when the match ends. Computer opponents use simple heuristics.
 
 **Flappy Jump:** tap the flight area, use the Jump button, or press Space/Up. Touching a pipe, ground or ceiling ends a flight. Pause saves the current flight. Leaving the page pauses it; press Start flight to continue. Refresh restores the last saved tap/pause checkpoint rather than replaying a continuously running simulation. A sudden force kill can lose movement since that checkpoint. No imported graphics, sounds or game assets are used.
 
@@ -58,7 +72,7 @@ Open **http://localhost:5173/puzzle-games/**. Stop the server with Ctrl+C.
 4. Open `http://YOUR-COMPUTER-IP:5173/puzzle-games/` on the phone.
 5. If Windows asks, allow Node.js on your **private** network. VPNs, guest Wi-Fi isolation or firewall policies may prevent phone access.
 
-Online gameplay works over the LAN. **PWA installation and service workers require HTTPS or localhost**, so use the deployed GitHub Pages URL to test offline installation on a real phone. Device profiles are separate: playing on a phone does not transfer your computer's progress. Use a JSON backup to transfer it.
+Online gameplay works over the LAN. **PWA installation and service workers require HTTPS or localhost**, so use the deployed GitHub Pages URL to test offline installation on a real phone. Link both devices to the same Family code to synchronize player saves and statistics, or transfer a JSON backup.
 
 ## Validation and production preview
 
