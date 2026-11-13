@@ -37,6 +37,33 @@ test('Petdoku cycle, undo and full completion',async ({page})=>{
   for(let j=0;j<g.size;j++) await page.getByRole('button',{name:'Hint',exact:true}).click();
   await expect(page.getByRole('heading',{name:'You found your zone.'})).toBeVisible(); expect((await active(page)).history[0].game).toBe('petdoku');
 });
+test('Petdoku checks pet correctness and maintains automatic crosses through undo, reload and removal', async ({page}) => {
+  await begin(page, 'Petdoku');
+  const g = (await active(page)).saves.petdoku;
+  const cell = i => page.getByRole('button', { name: new RegExp(`^Row ${Math.floor(i/g.size)+1}, column ${i%g.size+1},`) });
+  const wrong = g.board.findIndex((_,i) => !g.solution.includes(i));
+  await cell(wrong).click(); await cell(wrong).click();
+  await expect(page.getByRole('status')).toContainText('Incorrect spot');
+  await expect(cell(wrong)).toHaveAttribute('aria-invalid','true');
+  await expect(cell(wrong).locator('.pet-verdict')).toHaveText('!');
+  await expect(page.locator('.auto-excluded')).toHaveCount(0);
+  expect((await active(page)).saves.petdoku.mistakes).toBe(1);
+  await cell(wrong).click();
+  const pet = g.solution[0];
+  await cell(pet).click(); await cell(pet).click();
+  await expect(page.getByRole('status')).toContainText('Correct!');
+  await expect(cell(pet)).toHaveAttribute('aria-invalid','false');
+  await expect(cell(pet).locator('.pet-verdict')).toHaveText('✓');
+  const expected = g.board.flatMap((_,i) => i !== pet && (Math.floor(i/g.size) === Math.floor(pet/g.size) || i%g.size === pet%g.size || g.regions[i] === g.regions[pet] || Math.abs(Math.floor(i/g.size)-Math.floor(pet/g.size)) <= 1 && Math.abs(i%g.size-pet%g.size) <= 1) ? [i] : []);
+  await expect(page.locator('.auto-excluded')).toHaveCount(expected.length);
+  for (const i of expected) await expect(cell(i)).toContainText('×');
+  await cell(expected[0]).click(); await expect(page.getByRole('status')).toContainText('ruled out by a correct pet'); expect((await active(page)).saves.petdoku.board[expected[0]]).not.toBe(2);
+  await page.getByRole('button',{name:'Undo',exact:true}).click(); await expect(page.locator('.auto-excluded')).toHaveCount(0);
+  await page.getByRole('button',{name:'Redo',exact:true}).click(); await expect(page.locator('.auto-excluded')).toHaveCount(expected.length);
+  await page.reload(); await page.getByRole('button',{name:'Resume puzzle'}).click(); await expect(page.locator('.auto-excluded')).toHaveCount(expected.length);
+  await cell(pet).click(); await expect(page.locator('.auto-excluded')).toHaveCount(0);
+  expect((await active(page)).saves.petdoku.mistakes).toBe(1);
+});
 test('profiles stay independent and backup export/import works',async ({page})=>{
   await begin(page); await page.getByRole('button',{name:'Hint',exact:true}).click();
   const saved=(await active(page)).saves.sudoku;

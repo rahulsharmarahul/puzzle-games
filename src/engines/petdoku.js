@@ -21,3 +21,19 @@ export function petConflicts(board, regions, size) {
   return [...bad];
 }
 export function petsComplete(board, regions, size) { return board.filter(n => n === 2).length === size && petConflicts(board, regions, size).length === 0; }
+
+// Derived from confirmed pets, so removing/undoing a pet also removes its
+// automatic crosses without erasing any exclusions marked by the player.
+export function petExclusions(board, regions, size, solution) {
+  const excluded = new Set();
+  for (const pet of solution) {
+    if (board[pet] !== 2) continue;
+    const row = Math.floor(pet / size), col = pet % size;
+    for (let i = 0; i < board.length; i++) {
+      if (i === pet) continue;
+      const r = Math.floor(i / size), c = i % size;
+      if (r === row || c === col || regions[i] === regions[pet] || (Math.abs(r - row) <= 1 && Math.abs(c - col) <= 1)) excluded.add(i);
+    }
+  }
+  return excluded;
+}

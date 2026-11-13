@@ -8,6 +8,6 @@ Architecture: React/Vite static app; hash navigation; lazy loaded game screen; p
 - [x] Phase 4: daily challenges, statistics, family leaderboard, validated backups
 - [x] Phase 5: offline PWA, icons, build, deployment workflow, documentation, final QA
 
-Validation: 35 Vitest tests and 8 Playwright browser tests pass; production build succeeds. Browser tests use installed Chrome, with viewport sizes from 320px phones to desktop, and verify actual offline lazy loading. npm dependency audit reported zero vulnerabilities after updating Vitest. No remote push or deployment was performed.
+Validation: 38 Vitest tests and 9 Playwright browser tests pass; production build succeeds. Browser tests use installed Chrome, with viewport sizes from 320px phones to desktop, and verify actual offline lazy loading. Petdoku feedback and automatic exclusions are covered through undo/redo, removal and reload. npm dependency audit reported zero vulnerabilities after updating Vitest. No remote push or deployment was performed.
 
 Physical iPhone/iPad/Android testing and the actual GitHub Pages deployment remain user-side validation. Catalogue variety is finite; Petdoku difficulty is based on grid size. See README for these limits and operating-system force-kill timer behavior.

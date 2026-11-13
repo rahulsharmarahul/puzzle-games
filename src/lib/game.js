@@ -29,7 +29,7 @@ export function act(g, action) {
     } else if (action.type === 'erase') { next.board[i] = 0; delete next.notes[i]; }
     else if (action.type === 'value') {
       next.board[i] = action.value; delete next.notes[i];
-      if (action.value && (g.game === 'sudoku' ? action.value !== g.solution[i] : action.value === 2 && conflicts(next).length > 0)) next.mistakes++;
+      if (action.value && (g.game === 'sudoku' ? action.value !== g.solution[i] : action.value === 2 && !g.solution.includes(i))) next.mistakes++;
     } else return g;
   }
   return next;

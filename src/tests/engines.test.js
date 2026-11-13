@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import catalogue from '../data/catalogue.json';
 import { solveSudoku, sudokuConflicts, rateSudoku, candidates } from '../engines/sudoku';
-import { solvePets, petConflicts, petsComplete } from '../engines/petdoku';
+import { solvePets, petConflicts, petsComplete, petExclusions } from '../engines/petdoku';
 import { makePuzzle, dailyKey, localDate } from '../engines/puzzles';
 import { levels } from '../engines/random';
 import { createGame, act, complete, elapsedAt, formatTime } from '../lib/game';
@@ -38,6 +38,42 @@ describe('Petdoku catalogue and rules', () => {
   });
 });
 describe('Game actions and clock', () => {
+  it('checks incorrect Petdoku placements even without immediate rule conflicts', () => {
+    const g = createGame('petdoku', 'easy', 'feedback');
+    const wrong = g.board.findIndex((_,i) => !g.solution.includes(i));
+    const next = act(g, {type:'value', index:wrong, value:2});
+    expect(petConflicts(next.board, next.regions, next.size)).toEqual([]);
+    expect(next.mistakes).toBe(1);
+    expect(petExclusions(next.board, next.regions, next.size, next.solution).size).toBe(0);
+  });
+  it('correct pets exclude exactly their row, column, region and all touching neighbours', () => {
+    for (const level of levels) {
+      let g = createGame('petdoku', level, 'exclusions');
+      const pet = g.solution[1];
+      g = act(g, {type:'value', index:pet, value:2});
+      expect(g.mistakes).toBe(0);
+      const excluded = petExclusions(g.board, g.regions, g.size, g.solution);
+      const row = Math.floor(pet/g.size), col = pet%g.size;
+      for (let i=0; i<g.board.length; i++) {
+        const r = Math.floor(i/g.size), c = i%g.size;
+        const ruledOut = i !== pet && (r === row || c === col || g.regions[i] === g.regions[pet] || Math.abs(r-row) <= 1 && Math.abs(c-col) <= 1);
+        expect(excluded.has(i)).toBe(ruledOut);
+      }
+      expect(g.solution.some(i => excluded.has(i))).toBe(false);
+    }
+  });
+  it('automatic exclusions follow hints, undo, redo, removal and saved boards without losing manual crosses', () => {
+    let g = createGame('petdoku', 'medium', 'automatic-history');
+    const pet = g.solution[0], manual = g.board.findIndex((_,i) => !g.solution.includes(i));
+    g = act(g, {type:'value', index:manual, value:1});
+    g = act(g, {type:'hint'});
+    const excluded = [...petExclusions(g.board, g.regions, g.size, g.solution)];
+    expect(excluded.length).toBeGreaterThan(0);
+    expect([...petExclusions(...[g.board,g.regions,g.size,g.solution].map(v => JSON.parse(JSON.stringify(v))))]).toEqual(excluded);
+    g = act(g, {type:'undo'}); expect(petExclusions(g.board,g.regions,g.size,g.solution).size).toBe(0); expect(g.board[manual]).toBe(1);
+    g = act(g, {type:'redo'}); expect([...petExclusions(g.board,g.regions,g.size,g.solution)]).toEqual(excluded);
+    g = act(g, {type:'erase',index:pet}); expect(petExclusions(g.board,g.regions,g.size,g.solution).size).toBe(0); expect(g.board[manual]).toBe(1);
+  });
   it('toggles notes, erases, undoes and redoes without changing givens', () => {
     let g=createGame('sudoku','easy','actions'); const i=g.board.indexOf(0), given=g.board.findIndex(Boolean);
     expect(act(g,{type:'value',index:given,value:1})).toBe(g);
