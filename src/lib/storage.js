@@ -1,6 +1,7 @@
 import { localDate } from '../engines/puzzles';
 import { levels } from '../engines/random';
 import { makePuzzle } from '../engines/puzzles';
+import { validClub } from './club';
 const prefix = 'pz:', version = 1;
 let warning = '';
 export function getWarning() { return warning; }
@@ -45,6 +46,7 @@ export function validSave(g) {
 }
 export function validData(d) {
   if (!d || !d.saves || !d.stats || !d.daily || !Array.isArray(d.history) || d.history.length > 500) return false;
+  if (d.club !== undefined && !validClub(d.club,validSave)) return false;
   if (!Object.entries(d.saves).every(([k,g]) => ['sudoku','petdoku'].includes(k) && g.game === k && validSave(g))) return false;
   const numeric = ['started','completed','abandoned','time','completionTime','best','last','mistakes','hints','streak','longest','dailyStreak','longestDaily'];
   if (!Object.entries(d.stats).every(([key,s]) => /^(sudoku|petdoku):(easy|medium|hard|expert)$/.test(key) && numeric.every(k => Number.isFinite(s[k]) && s[k] >= 0) && s.completed + s.abandoned <= s.started)) return false;

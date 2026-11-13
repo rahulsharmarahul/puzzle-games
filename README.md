@@ -1,6 +1,33 @@
 # Puzzle Zone
 
-A free, mobile-first family puzzle app: Sudoku and Petdoku, four difficulty levels, local profiles, daily challenges, statistics, backups and offline play. React, Vite, JavaScript and plain CSS. No accounts, backend, paid services, API keys, advertisements or remote fonts.
+A free, mobile-first family game collection: Sudoku, Petdoku, Flappy Jump, Wordle, Checkers and Dots and Boxes, with local profiles, same-device multiplayer, saved sessions, statistics, backups and offline play. React, Vite, JavaScript and plain CSS. No accounts, backend, paid services, API keys, advertisements or remote fonts.
+
+## New games and same-device multiplayer
+
+The home page has six game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Every new game offers solo and two-player setup. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. There is no network matchmaking or remote multiplayer.
+
+| Game | Solo | Same-device multiplayer |
+| --- | --- | --- |
+| Sudoku | Existing four difficulties and daily puzzles | Cooperative shared board; turn changes after each board-changing action |
+| Petdoku | Existing four difficulties, feedback and automatic crosses | Cooperative shared board with the same correctness feedback and automatic crosses |
+| Flappy Jump | Tap/Space to fly through pipes and build a score | Each player takes one flight on exactly the same seeded course; highest score wins |
+| Wordle | Five-letter English word, six guesses, daily or free play | Cooperative guessing; alternate submitted guesses and share six attempts |
+| Checkers | Basic computer opponent | Two players alternate moves on one board |
+| Dots and Boxes | Basic computer opponent | Two players draw edges; completing a box earns another turn |
+
+**Flappy Jump:** tap the flight area, use the Jump button, or press Space/Up. Touching a pipe, ground or ceiling ends a flight. Pause saves the current flight. Leaving the page pauses it; press Start flight to continue. Refresh restores the last saved tap/pause checkpoint rather than replaying a continuously running simulation. A sudden force kill can lose movement since that checkpoint. No imported graphics, sounds or game assets are used.
+
+**Wordle:** each accepted guess must be in the bundled, independently compiled offline vocabulary (887 five-letter words). Some otherwise valid English words are deliberately not in this compact list. Green/✓ means the right letter in the right spot; amber/↔ means present elsewhere; grey/× means there is no remaining copy of that letter. Exact matches consume letters first, so duplicate-letter feedback is correct. A guess may not be submitted twice. Its deterministic daily answer schedule is independent of the NYT game. Cooperative play shares feedback and the six-guess limit; it is a team game, not a hidden-board duel. Daily wins cannot inflate totals through replay, even after recent history is pruned.
+
+**Checkers:** English/American rules on an 8×8 board with 12 pieces per side. Men move and capture diagonally forward; kings move/capture one diagonal step (or jump) in either direction. Captures are mandatory, and a capture chain must continue with the same piece. Any available capture chain may be selected; the longest is not compulsory. Promotion ends the turn. A player unable to move loses. Three repeated positions, or 40 full turns of kings with no capture/man move, end in a draw. Computer play uses a lightweight legal-move heuristic, not tournament-level search. [Rule reference](https://wcdf.net/rules.htm).
+
+**Dots and Boxes:** choose a board of 2×2 through 6×6 boxes. Tap a horizontal or vertical edge between adjacent dots. Closing a box claims it and keeps your turn; one edge may claim two boxes. Most boxes wins, with ties recorded as draws. The computer prioritizes scoring moves and avoids offering three-sided boxes where possible. [Rule reference](https://www.math.ucla.edu/~tom/Games/dots%26boxes.html).
+
+Shared Sudoku/Petdoku sessions never overwrite solo unfinished games, daily results or solo solve statistics. Notes do not pass the turn; entering, erasing, hinting, undoing or redoing a board-changing action does. The contribution display counts these actions, rather than claiming each is a correct placement. One shared/arcade session per game is retained for each hosting profile, including its latest result. Starting another session asks before replacing an unfinished one. Finished sessions can be revisited after refresh. There is no competitive undo in Checkers or Dots and Boxes; the existing cooperative puzzles retain their undo controls.
+
+Statistics has a separate **Arcade & shared games** section with per-game lifetime finishes, host/team wins, losses, draws, Flappy Jump best match score, and recent results. The last 500 results are retained; lifetime totals remain when records are pruned. These results are not mixed with solo puzzle times or the solo-puzzle family leaderboard. The player who started the match owns its record; choosing a second family member does not alter that other profile's solo statistics.
+
+All new state is in an optional `club` section inside the active profile's existing version-1 localStorage payload. Old saves and old backups work without migration. Export/import includes shared sessions, rosters, lifetime totals, daily completion deduplication and recent match history. Imported sessions are checked for allowed game IDs, state types, board dimensions, counters and legal Wordle replay. Both lazy screens and every required word/puzzle asset are precached in production.
 
 ## Run locally
 

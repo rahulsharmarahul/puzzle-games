@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Puzzle Zone",
   "short_name": "Puzzle Zone",
-  "description": "Your daily moment of play. Sudoku and Petdoku, even offline.",
+  "description": "Six free games, daily puzzles and same-device multiplayer. Play offline with your family.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
