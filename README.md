@@ -1,10 +1,16 @@
 # Puzzle Zone
 
-A free, mobile-first family game collection: Sudoku, Petdoku, Flappy Jump, Wordle, Checkers and Dots and Boxes, with local profiles, same-device multiplayer, saved sessions, statistics, backups and offline play. React, Vite, JavaScript and plain CSS. No accounts, backend, paid services, API keys, advertisements or remote fonts.
+A free, mobile-first family game collection: Sudoku, Petdoku, Flappy Jump, Wordle, Checkers and Dots and Boxes, with local profiles, same-device multiplayer, saved sessions, statistics, backups and offline play. React, Vite, JavaScript and plain CSS. Solo and same-device play need no backend or accounts. Optional different-device multiplayer uses a separate Cloudflare Worker; no player email accounts, paid services, advertisements or remote fonts are required.
+
+## Play online from different devices
+
+Open **Online rooms**, select a game, and create a room. Send the invitation link or eight-character code to your friend, who joins from another device. Checkers and Dots and Boxes are competitive; Sudoku, Petdoku and Wordle are cooperative; Flappy Jump is a matching-course score challenge. Both players need internet. Existing solo and same-device modes remain available offline.
+
+The configured service is `https://puzzle-zone-multiplayer.rahulsharma-rahul.workers.dev`, set in `public/multiplayer.json`. Deployment, local development, security, reconnection, room expiry and free-quota details are documented in **[ONLINE.md](ONLINE.md)**. The frontend must be pushed to GitHub Pages after changes to make the new online interface available there. Cloudflare backend changes are deployed separately with `npm run multiplayer:deploy`.
 
 ## New games and same-device multiplayer
 
-The home page has six game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Every new game offers solo and two-player setup. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. There is no network matchmaking or remote multiplayer.
+The home page has six game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Every new game offers solo and two-player setup. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
 
 | Game | Solo | Same-device multiplayer |
 | --- | --- | --- |
@@ -116,7 +122,7 @@ Both games open paused. Start/Resume begins the timer. Explicit pause, hiding th
 
 ## Storage, statistics and privacy
 
-Only browser **localStorage** holds user data. App files live in the bounded service-worker cache. No progress is sent to a server. Optional player names and emoji avatars are the only profile details.
+Browser **localStorage** holds local profiles, solo/same-device saves and statistics. App files live in the bounded service-worker cache. Online rooms share guest names, avatars and match state with the configured Cloudflare service for up to six hours; those rooms are separate from local lifetime statistics. Optional player names and emoji avatars are the only profile details. See ONLINE.md for online-room privacy and rejoin credentials.
 
 `src/lib/storage.js` owns versioned envelopes, known-schema migrations, defensive save/backup validation, quota warnings and the storage usage indicator. Keys separate profile metadata (`pz:profiles`), preferences (`pz:settings`) and player progress (`pz:player:ID`). UUIDs isolate family members. Version 0 migration supports the documented pre-streak development envelope; unknown future versions are not interpreted. Malformed player data falls back safely; restore a backup to recover progress.
 
