@@ -1,5 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import { createRoom, joinRoom, publicRoom, applyRoomAction, clockRoom } from './model.js';
+import { rateLimit } from './limits.js';
+export { FamilyGroup } from './family.js';
 
 const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const code=()=>Array.from(crypto.getRandomValues(new Uint8Array(8)),n=>alphabet[n%alphabet.length]).join('');
@@ -17,11 +19,24 @@ export default {
     if(request.method==='OPTIONS')return cors(new Response(null,{status:204}));
     try {
       const path=url.pathname;
+      const familyPath=path.match(/^\/families\/([A-Z2-9]{16})(\/socket)?$/);
+      if(path==='/families'&&request.method==='POST'||familyPath){
+        if(familyPath?.[2]&&request.headers.get('Upgrade')?.toLowerCase()==='websocket')return await env.FAMILIES.get(env.FAMILIES.idFromName(familyPath[1])).fetch(request);
+        if(request.method!=='POST')return cors(json({error:'Not found.'},404));
+        const ip=request.headers.get('CF-Connecting-IP')||'local',limiter=env.ROOMS.get(env.ROOMS.idFromName('rate:'+await digest(ip)));
+        const permit=await limiter.fetch('https://internal/limit',{method:'POST',body:JSON.stringify({kind:path==='/families'?'family':'sync'})});if(!permit.ok){const failure=await permit.json();return cors(json(failure,429));}
+        if(path==='/families'){
+          const input=await body(request),familyCode=code()+code();
+          const result=await env.FAMILIES.get(env.FAMILIES.idFromName(familyCode)).fetch('https://internal/family',{method:'POST',body:JSON.stringify({type:'create',profiles:input.profiles})});
+          return cors(json({...await result.json(),code:familyCode},result.status));
+        }
+        const result=await env.FAMILIES.get(env.FAMILIES.idFromName(familyPath[1])).fetch(new Request('https://internal/family',request));return cors(result);
+      }
       if(request.method==='POST'&&(path==='/rooms'||/^\/rooms\/[A-Z2-9]{8}\/join$/.test(path))) {
         const ip=request.headers.get('CF-Connecting-IP')||'local';
         const limiter=env.ROOMS.get(env.ROOMS.idFromName('rate:'+await digest(ip)));
-        const permit=await limiter.fetch('https://internal/limit',{method:'POST',body:JSON.stringify({create:path==='/rooms'})});
-        if(!permit.ok)return cors(json({error:'Too many attempts. Wait before trying again; room creation is limited per hour.'},429));
+        const permit=await limiter.fetch('https://internal/limit',{method:'POST',body:JSON.stringify({kind:path==='/rooms'?'room':'join'})});
+        if(!permit.ok)return cors(json(await permit.json(),429));
         const input=await body(request);
         if(path==='/rooms') {
           for(let i=0;i<3;i++){const roomCode=code(),secret=token();const room=env.ROOMS.get(env.ROOMS.idFromName(roomCode));const result=await room.fetch('https://internal/create',{method:'POST',body:JSON.stringify({code:roomCode,input,tokenHash:await digest(secret)})});if(result.status===409)continue;const data=await result.json();return cors(json(result.ok?{...data,token:secret,seat:0}:data,result.status));}
@@ -50,7 +65,7 @@ export class GameRoom extends DurableObject {
   async fetch(request) {
     const path=new URL(request.url).pathname;
     if(path==='/limit') {
-      return this.ctx.blockConcurrencyWhile(async()=>{const input=await body(request),now=Date.now(),r=(await this.ctx.storage.get('limit'))||{minute:0,total:0,hour:0,created:0};const minute=Math.floor(now/60000),hour=Math.floor(now/3600000);if(r.minute!==minute){r.minute=minute;r.total=0;}if(r.hour!==hour){r.hour=hour;r.created=0;}r.total++;if(input.create)r.created++;await this.ctx.storage.put('limit',r);await this.ctx.storage.setAlarm(now+3700000);return json({ok:r.total<=30&&r.created<=10},r.total>30||r.created>10?429:200);});
+      return this.ctx.blockConcurrencyWhile(async()=>{const input=await body(request),now=Date.now(),result=rateLimit(await this.ctx.storage.get('limit'),input.kind,now);await this.ctx.storage.put('limit',result.next);await this.ctx.storage.setAlarm(now+3700000);return json({ok:result.ok,error:result.error,retryAfter:result.retryAfter},result.ok?200:429);});
     }
     if(path==='/create'||path==='/join') {
       return this.ctx.blockConcurrencyWhile(async()=>{try{const data=await body(request);if(path==='/create'){if(this.room)return json({error:'Room already exists.'},409);this.room=createRoom(data.code,data.input);this.keys=[data.tokenHash,null];await this.ctx.storage.setAlarm(this.room.expires);}else{if(!this.room)return json({error:'Room not found. Check the code.'},404);joinRoom(this.room,data.input);this.keys[1]=data.tokenHash;}await this.persist();this.broadcast();return json({code:this.room.code,room:this.snapshot()},201);}catch(error){return json({error:error.message},400);}});

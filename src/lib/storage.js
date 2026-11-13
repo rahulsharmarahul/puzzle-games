@@ -22,8 +22,8 @@ export function migrate(envelope) {
   }
   return value;
 }
-export function write(key, data) {
-  try { localStorage.setItem(prefix + key, JSON.stringify({ version, data })); return true; }
+export function write(key, data, options = {}) {
+  try { localStorage.setItem(prefix + key, JSON.stringify({ version, data })); if(!options.silent&&(key==='profiles'||key.startsWith('player:'))&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('pz-local-change',{detail:{key}})); return true; }
   catch { warning = 'Progress could not be saved. Browser storage may be full or unavailable. Export a backup before closing.'; window.dispatchEvent(new Event('storage-warning')); return false; }
 }
 const uid = () => crypto.randomUUID();
@@ -57,9 +57,9 @@ export function validData(d) {
   return d.history.every(h => h && typeof h.id === 'string' && ['sudoku','petdoku'].includes(h.game) && levels.includes(h.difficulty) && typeof h.date === 'string' && ['elapsed','mistakes','hints'].every(k => Number.isFinite(h[k]) && h[k] >= 0));
 }
 export function loadData(id) { const data = read(`player:${id}`, freshData()); if (validData(data)) return data; warning = 'An invalid player save was found. It has been preserved; you can import a backup.'; return freshData(); }
-export const saveData = (id, data) => write(`player:${id}`, data);
-export function addProfile(meta, name, avatar) { const id = uid(); return { profiles: [...meta.profiles, { id, name: name.trim().slice(0,30) || 'Player', avatar }], active: id }; }
-export function deleteProfile(meta, id) { if (meta.profiles.length < 2) throw Error('Keep at least one profile.'); const profiles = meta.profiles.filter(p => p.id !== id); const next = { profiles, active: meta.active === id ? profiles[0].id : meta.active }; if (write('profiles', next)) { try { localStorage.removeItem(prefix + 'player:' + id); } catch { /* metadata still hides deleted profile */ } } return next; }
+export const saveData = (id, data, options = {}) => write(`player:${id}`, data, options);
+export function addProfile(meta, name, avatar) { const id = uid(); return { profiles: [...meta.profiles, { id, name: name.trim().slice(0,30) || 'Player', avatar, ...(read('family-link',null)?.code?{shared:true}:{}) }], active: id }; }
+export function deleteProfile(meta, id) { if (meta.profiles.length < 2 || meta.profiles.find(p=>p.id===id)?.shared&&meta.profiles.filter(p=>p.shared).length<2) throw Error('Keep at least one player in the family.'); const profiles = meta.profiles.filter(p => p.id !== id); const next = { profiles, active: meta.active === id ? profiles[0].id : meta.active }; if (write('profiles', next)) { try { localStorage.removeItem(prefix + 'player:' + id); } catch { /* metadata still hides deleted profile */ } } return next; }
 const emptyStats = () => ({ started: 0, completed: 0, abandoned: 0, time: 0, completionTime: 0, best: 0, last: 0, mistakes: 0, hints: 0, streak: 0, longest: 0, dailyStreak: 0, longestDaily: 0, lastDate: null, lastCompletedDate: null });
 function touchDate(d) {
   const today = localDate(), yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);

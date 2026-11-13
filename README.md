@@ -8,6 +8,10 @@ Open **Online rooms**, select a game, and create a room. Send the invitation lin
 
 The configured service is `https://puzzle-zone-multiplayer.rahulsharma-rahul.workers.dev`, set in `public/multiplayer.json`. Deployment, local development, security, reconnection, room expiry and free-quota details are documented in **[ONLINE.md](ONLINE.md)**. The frontend must be pushed to GitHub Pages after changes to make the new online interface available there. Cloudflare backend changes are deployed separately with `npm run multiplayer:deploy`.
 
+## Family sync across devices
+
+In **Family**, create a shared family on one device, then enter its private family code on your other devices. Shared player names, avatars, unfinished games and statistics synchronize automatically. Select the correct shared player on each device. Existing device-only profiles are preserved, with an explicit copy-progress option for moving their saves into a shared player. Offline changes queue locally; conflicting changes require a choice and keep a recovery copy. Wait for **Up to date** before switching devices. See [ONLINE.md](ONLINE.md) for details and privacy.
+
 ## New games and same-device multiplayer
 
 The home page has six game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Every new game offers solo and two-player setup. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
