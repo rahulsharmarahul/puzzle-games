@@ -175,3 +175,9 @@ scripts/                   Reproducible catalogue and icon generation
 To add a game, introduce an engine and bounded puzzle source, register it in puzzle selection, extend the shared game action/validation dispatch and persistence allowlists, add a game card and instructions, and test it. No backend or routing restructuring is required. PNG icons are checked in; the optional `scripts/icons.ps1` regenerates them on Windows using System.Drawing.
 
 The app uses semantic controls, labels, visible focus, reduced-motion preferences, region numbers, touch controls and light/dark modes. Sound is off by default and generated with the browser audio API only when enabled.
+
+## Appearance and compact home
+
+Settings offers 14 preset palettes: Garden light/dark, Tesla, Apple, Microsoft, Google, Netflix, Spotify, Amazon, GitHub, Data-phi.ai, Ocean, Sunset and Lavender, plus Custom. Company names describe colour inspirations; the interface uses original styling and no downloaded logos or fonts. Data-phi.ai uses charcoal, mint and cyan inspired by https://data-phi.ai/. Custom lets you choose the page background and accent; card surfaces and readable text/button/link colours are calculated automatically. The top-bar sun button cycles presets. Appearance is saved on this device and included when exporting/restoring settings in backups.
+
+The large home banner is removed. Compact game cards show four per row on wide desktops, three on smaller desktops and two or one on tablets/phones. Today's Sudoku is still available from the small daily-challenge button beside the collection heading. Gameplay feedback and distinct board colours remain visible across themes.

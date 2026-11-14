@@ -108,7 +108,7 @@ test('both game boards and controls fit a 320px phone, and theme persists',async
   await page.setViewportSize({width:320,height:740});
   for(const game of ['Sudoku','Petdoku']) {
     await begin(page,game); expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-    await page.getByRole('button',{name:'Hint',exact:true}).click(); await page.getByRole('button',{name:'Toggle color theme'}).click();
+    await page.getByRole('button',{name:'Hint',exact:true}).click(); for(let i=0;i<14&&await page.locator('html').getAttribute('data-theme')!=='dark';i++)await page.getByRole('button',{name:'Toggle color theme'}).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme','dark'); await page.reload(); await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
     await page.getByRole('button',{name:'Resume puzzle'}).click(); await page.screenshot({path:`test-results/mobile-${game.toLowerCase()}.png`,fullPage:true});
     await page.getByRole('button',{name:'Toggle color theme'}).click();
