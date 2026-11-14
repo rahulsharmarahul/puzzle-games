@@ -82,8 +82,8 @@ test('play Flappy Jump using visual position, pause/resume, and finish both flig
   for(let tick=0;tick<70&&await page.getByRole('button',{name:'Pause flight',exact:true}).isEnabled();tick++){
     // Read rendered pixels, as a player sees them, rather than the simulation.
     const picture=await page.locator('canvas').evaluate(canvas=>{const c=canvas.getContext('2d'),d=c.getImageData(0,0,360,500).data;let y=0,n=0;for(let r=0;r<475;r++)for(let x=70;x<95;x++){const k=(r*360+x)*4;if(d[k]===229&&d[k+1]===175&&d[k+2]===76){y+=r;n++;}}let top=150;for(let x=72;x<360;x++){const k=x*4;if(d[k]===66&&d[k+1]===109&&d[k+2]===80){for(let r=1;r<350;r++){const i=(r*360+x)*4;if(d[i]!==66){top=r;break;}}break;}}return {y:n?y/n:230,target:top+90};});
-    if(picture.y>picture.target+10)await page.getByRole('button',{name:'Jump ↑',exact:true}).click();await page.waitForTimeout(80);
-    if(tick===10){await page.getByRole('button',{name:'Pause flight',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Start flight',exact:true}).click();}
+    if(picture.y>picture.target+10){try{await page.getByRole('button',{name:'Jump ↑',exact:true}).click({timeout:500});}catch(error){if(!await page.getByRole('button',{name:'Pause flight',exact:true}).isEnabled())break;throw error;}}await page.waitForTimeout(80);
+    if(tick===10){try{await page.getByRole('button',{name:'Pause flight',exact:true}).click({timeout:500});}catch(error){if(!await page.getByRole('button',{name:'Pause flight',exact:true}).isEnabled())break;throw error;}await page.reload();await page.getByRole('button',{name:'Start flight',exact:true}).click();}
   }
   // Finish the current flight by releasing the controls, then play the second.
   await expect(page.getByRole('button',{name:'Start flight',exact:true})).toBeVisible({timeout:10000});await page.getByRole('button',{name:'Start flight',exact:true}).click();await page.keyboard.press('ArrowUp');await expect(page.locator('.match-result')).toBeVisible({timeout:10000});await result(page);

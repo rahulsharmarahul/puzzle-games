@@ -42,3 +42,7 @@ Family progress, favorites and conflict recovery.
 The completed browser results and runtime-error checks found no further
 blocking gameplay defects in the tested sessions. These sessions do not exhaust
 every possible game position, browser or physical phone.
+
+## Rich themes, pets and Wordle update
+
+The later appearance update adds six-colour palettes and custom controls, distinct Netflix/Tesla styling, 12 pet choices with vivid numbered regions, fixed green/amber/slate Wordle feedback with a top legend, and persistent daily current/best streaks. Four additional browser scenarios cover actual colour/style changes, pet selection and reload, all three feedback colours under company themes, and a daily streak win. Appearance backup restoration also checks the chosen pet. The suite now contains 118 unit cases and 50 offline/local browser scenarios. Online/Family checks include different pets on the same board and a daily streak arriving on another device.

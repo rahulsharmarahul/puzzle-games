@@ -33,8 +33,9 @@ test('online Wordle shares feedback and validates guesses without exposing its a
 });
 for(const game of ['sudoku','petdoku'])test(`online ${game} synchronizes turns, shared pause, hints and completion`,async({browser})=>{
   const {a,b,close}=await pair(browser,game);expect(a.latest.room.state.solution).toBeUndefined();const clients=[a,b];
+  if(game==='petdoku'){await a.page.getByRole('button',{name:'Choose Panda',exact:true}).click();await b.page.getByRole('button',{name:'Choose Bunny',exact:true}).click();await expect(a.page.getByRole('button',{name:'Choose Panda',exact:true})).toHaveAttribute('aria-pressed','true');}
   await b.page.getByRole('button',{name:'Pause shared game',exact:true}).click();await expect(a.page.getByRole('button',{name:'Resume shared game',exact:true})).toBeVisible();await a.page.getByRole('button',{name:'Resume shared game',exact:true}).click();await expect.poll(()=>a.latest.room.paused).toBe(false);
-  for(let i=0;i<81&&a.latest.room.phase!=='complete';i++){const current=clients[a.latest.room.turn],old=a.latest.room.revision;await current.page.getByRole('button',{name:'Hint',exact:true}).click();await expect.poll(()=>a.latest.room.revision).toBe(old+1);await expect.poll(()=>b.latest.room.revision).toBe(old+1);}
+  for(let i=0;i<81&&a.latest.room.phase!=='complete';i++){const current=clients[a.latest.room.turn],old=a.latest.room.revision;await current.page.getByRole('button',{name:'Hint',exact:true}).click();await expect.poll(()=>a.latest.room.revision).toBe(old+1);await expect.poll(()=>b.latest.room.revision).toBe(old+1);if(game==='petdoku'&&i===0){await expect(a.page.locator('.petdoku-board .correct-pet .pet').first()).toHaveText('🐼');await expect(b.page.locator('.petdoku-board .correct-pet .pet').first()).toHaveText('🐰');}}
   await expect(a.page.locator('.match-result')).toContainText('Solved together');await expect(b.page.locator('.match-result')).toContainText('Solved together');await close();
 });
 test('online Flappy Jump validates both flights on the same course and reports a draw',async({browser})=>{

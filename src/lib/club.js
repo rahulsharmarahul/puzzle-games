@@ -1,3 +1,4 @@
+import {recordWordleDay,validDay,wordleDays,wordleStreak} from './wordle-streak';
 import {tableGames,createTable,maxPlayers,validTable} from '../engines/table';
 import { createCheckers } from '../engines/checkers';
 import { createDots } from '../engines/dots';
@@ -24,6 +25,7 @@ export function createSession(game,mode,players,{difficulty='easy',size=4,seed=c
 }
 export function updateClub(data,session) {
   const club=structuredClone(data.club || emptyClub());
+  if(club.wordleDays===undefined){club.wordleDays=wordleDays(club);club.wordleBest=wordleStreak(club).best;}
   club.sessions[session.game]=session;
   const dailyId=session.daily ? `${session.daily}:${session.mode}` : null;
   if(session.status==='complete' && !(dailyId&&club.daily?.[dailyId]) && !club.history.some(h=>h.id===session.id || session.daily && h.daily===session.daily && h.mode===session.mode)) {
@@ -37,6 +39,7 @@ export function updateClub(data,session) {
     if(session.game==='flappy')stats.bestScore=Math.max(stats.bestScore,...session.state.scores);
     club.history=[{id:session.id,game:session.game,mode:session.mode,players:session.players.map(p=>p.name),winner:session.winner,date:new Date().toISOString(),daily:session.daily,scores:session.game==='flappy' ? session.state.scores : session.game==='dots' ? [0,1].map(p=>session.state.boxes.filter(b=>b===p).length) : null},...club.history].slice(0,500);
   }
+  Object.assign(club,recordWordleDay(club,session));
   return {...data,club};
 }
 const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
@@ -62,6 +65,8 @@ export function validSession(s,validPuzzle) {
   return validFlight(st.flight)&&integer(st.round,0,1)&&Array.isArray(st.scores)&&st.scores.length<=2&&st.scores.every(n=>integer(n,0,1e8));
 }
 export function validClub(club,validPuzzle) {
+  if(club?.wordleDays!==undefined&&(!club.wordleDays||typeof club.wordleDays!=='object'||Array.isArray(club.wordleDays)||Object.keys(club.wordleDays).length>4000||!Object.entries(club.wordleDays).every(([day,result])=>validDay(day)&&['won','lost'].includes(result))))return false;
+  if(club?.wordleBest!==undefined&&!integer(club.wordleBest,0,1e8))return false;
   if(club?.daily!==undefined && (!club.daily || typeof club.daily!=='object' || Array.isArray(club.daily) || !Object.entries(club.daily).every(([key,id])=>/^wordle-v1:\d{4}-\d{2}-\d{2}:(solo|local)$/.test(key)&&typeof id==='string'&&id.length<100)))return false;
   if (club?.stats !== undefined && (!club.stats || typeof club.stats!=='object' || Array.isArray(club.stats) || !Object.entries(club.stats).every(([game,s])=>Object.hasOwn(clubGames,game)&&s&&['played','wins','losses','draws','bestScore'].every(k=>integer(s[k],0,1e12))&&s.wins+s.losses+s.draws===s.played)))return false;
   return club && club.sessions && typeof club.sessions==='object' && !Array.isArray(club.sessions) && Object.entries(club.sessions).every(([key,s])=>s.game===key&&validSession(s,validPuzzle)) && Array.isArray(club.history)&&club.history.length<=500&&club.history.every(h=>h&&typeof h.id==='string'&&Object.hasOwn(clubGames,h.game)&&['solo','local'].includes(h.mode)&&typeof h.date==='string'&&Array.isArray(h.players)&&h.players.length>=2&&h.players.length<=maxPlayers(h.game)&&h.players.every(p=>typeof p==='string'&&p.length<=30)&&(h.winner===null||(['draw','team','lost'].includes(h.winner)||integer(h.winner,0,h.players.length-1)))&&(h.scores===null||Array.isArray(h.scores)&&h.scores.length<=2&&h.scores.every(n=>integer(n,0,1e8))));

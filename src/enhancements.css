@@ -1,0 +1,95 @@
+/* Six-role palettes colour the actual interface, not only the chooser. */
+:root[data-palette] .nav-link.active{background:color-mix(in srgb,var(--nav-accent) 14%,var(--panel));border-left:3px solid var(--nav-accent);color:var(--nav-text)}
+:root[data-palette] .metric-icon{background:color-mix(in srgb,var(--secondary) 16%,var(--panel));color:var(--text)}
+:root[data-palette] .metric-icon.clock{background:color-mix(in srgb,var(--highlight) 22%,var(--panel));color:var(--text)}
+:root[data-palette] .metric-icon.sun{background:color-mix(in srgb,var(--card-accent) 18%,var(--panel));color:var(--text)}
+:root[data-palette] .game-card:nth-child(3n+1) .card-visual{background:color-mix(in srgb,var(--secondary) 20%,var(--panel))}
+:root[data-palette] .game-card:nth-child(3n+2) .card-visual{background:color-mix(in srgb,var(--highlight) 24%,var(--panel))}
+:root[data-palette] .game-card:nth-child(3n) .card-visual{background:color-mix(in srgb,var(--card-accent) 22%,var(--panel))}
+:root[data-palette] .game-card{border-top:3px solid var(--card-accent);transition:border-color .15s,box-shadow .15s}
+:root[data-palette] .game-card:hover{border-color:var(--secondary);box-shadow:0 5px 20px color-mix(in srgb,var(--secondary) 18%,transparent)}
+:root[data-palette] .daily-strip{border-left:4px solid var(--highlight)}
+.theme-preview .preview-cards>i:nth-child(2){border-top-color:var(--secondary)}
+.theme-preview .preview-cards>i:nth-child(3){border-top-color:var(--highlight)}
+.theme-preview .preview-rail i:nth-child(2){background:var(--nav-accent)}
+.theme-preview .preview-rail i:nth-child(3){background:var(--card-accent)}
+.preview-swatches>i{width:17px;height:7px}
+.custom-colours{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.colour-field{min-width:0}
+
+/* Palette-specific shape, typography and surfaces set the brand-inspired mood. */
+[data-palette=netflix]{font-family:Arial,"Segoe UI",sans-serif}
+[data-palette=netflix] .brand,[data-palette=netflix] .mobile-brand{color:#e50914;font-weight:900;letter-spacing:-1.2px}
+[data-palette=netflix] h1,[data-palette=netflix] .section-heading h2{font-weight:850;letter-spacing:-.03em}
+[data-palette=netflix] .panel,[data-palette=netflix] .game-card,[data-palette=netflix] .button{border-radius:5px}
+:root[data-palette=netflix] .game-card .card-visual{background:linear-gradient(135deg,#3b141b,#22222a 65%,#141414)}
+:root[data-palette=netflix] .game-card{border-top-color:#b20710;box-shadow:0 6px 20px #00000045}
+[data-palette=netflix] .topbar{background:#080808;border-bottom:2px solid #b20710}
+[data-palette=netflix] .game-card .arcade-symbol{color:#ff4952}
+[data-palette=netflix] .button.primary{font-weight:800;letter-spacing:.03em}
+[data-palette=tesla]{font-family:"Segoe UI",Arial,sans-serif}
+[data-palette=tesla] .brand,[data-palette=tesla] .mobile-brand,[data-palette=tesla] .game-card h3{font-weight:600;letter-spacing:.065em;text-transform:uppercase}
+[data-palette=tesla] .panel,[data-palette=tesla] .button,[data-palette=tesla] .game-card{border-radius:3px}
+[data-palette=tesla] .topbar{background:#202731;color:#ffffff;border-bottom:3px solid #c71c2c}
+[data-palette=tesla] .topbar .breadcrumb{color:#d7dce5}
+[data-palette=tesla] .game-card .card-visual{background:linear-gradient(130deg,#e5e8ed,#b8c1cd)}
+[data-palette=tesla] .button.primary{text-transform:uppercase;letter-spacing:.08em;font-size:10px}
+[data-palette=tesla] .game-card .arcade-symbol{color:#202731}
+[data-palette=apple]{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+[data-palette=apple] .panel,[data-palette=apple] .game-card{border-radius:22px}
+[data-palette=apple] .button{border-radius:24px}
+[data-palette=apple] .topbar{background:color-mix(in srgb,var(--panel) 85%,transparent);backdrop-filter:blur(16px)}
+[data-palette=apple] .game-card{box-shadow:0 8px 25px #565d7b12;border-top-width:1px}
+[data-palette=microsoft] .panel,[data-palette=microsoft] .game-card,[data-palette=microsoft] .button{border-radius:3px}
+[data-palette=google] .button,[data-palette=google] .pill{border-radius:24px}
+[data-palette=spotify] .button,[data-palette=spotify] .pill{border-radius:25px;font-weight:750}
+[data-palette=spotify] .game-card{border-radius:9px;box-shadow:0 8px 20px #00000035}
+[data-palette=amazon] .topbar{background:#232f3e;color:#ffffff}
+[data-palette=amazon] .topbar .breadcrumb{color:#ffffff}
+[data-palette=github] .panel,[data-palette=github] .game-card{border-radius:6px;box-shadow:none}
+[data-palette=github] .eyebrow,[data-palette=github] .breadcrumb{font-family:Consolas,monospace;letter-spacing:.07em}
+[data-palette=data-phi] .game-card .card-visual{background:linear-gradient(125deg,#08de8726,#03e4e033,#d2f24619)}
+
+.pet-picker{max-width:760px;margin:15px 0 23px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.pet-picker-heading{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:11px}
+.pet-picker-heading>span{color:var(--muted)}
+.pet-options{display:flex;gap:7px;flex-wrap:wrap}
+.pet-options button{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);background:var(--soft);border-radius:10px;flex-shrink:0}
+.pet-options button span{font-size:27px;line-height:1}
+.pet-options button[aria-pressed=true]{outline:2px solid var(--green);outline-offset:1px;background:color-mix(in srgb,var(--highlight) 24%,var(--panel))}
+:root[data-palette] .petdoku-board .pet-region-0,.mini-pets .pet-region-0{background:#ffd166}
+:root[data-palette] .petdoku-board .pet-region-1,.mini-pets .pet-region-1{background:#ffad87}
+:root[data-palette] .petdoku-board .pet-region-2,.mini-pets .pet-region-2{background:#65d6ce}
+:root[data-palette] .petdoku-board .pet-region-3,.mini-pets .pet-region-3{background:#f7a1c4}
+:root[data-palette] .petdoku-board .pet-region-4,.mini-pets .pet-region-4{background:#b7a1f6}
+:root[data-palette] .petdoku-board .pet-region-5,.mini-pets .pet-region-5{background:#bde565}
+:root[data-palette] .petdoku-board .pet-region-6,.mini-pets .pet-region-6{background:#ff998a}
+:root[data-palette] .petdoku-board .pet-region-7,.mini-pets .pet-region-7{background:#81c8ff}
+:root[data-palette] .petdoku-board .cell{color:#18302b;border-color:#243a5066}
+:root[data-palette] .petdoku-board .region-number{color:#18302b;opacity:1;font-weight:700}
+:root[data-palette] .petdoku-board .cross{color:#253a50;opacity:.85}
+:root[data-palette] .petdoku-board .cell-selected{box-shadow:inset 0 0 0 3px #183046}
+
+/* Feedback semantics remain fixed and vivid under every site palette. */
+.word-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:520px;margin:0 auto 20px}
+.word-legend>span{display:grid;grid-template-columns:25px 1fr;gap:2px 7px;align-content:start;padding:10px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.word-legend i{grid-row:span 2;width:25px;height:25px;display:grid;place-items:center;border-radius:5px;font-style:normal;font-weight:800}
+.word-legend strong{font-size:11px;line-height:1.35}
+.word-legend small{font-size:9px;line-height:1.45}
+:root[data-palette] .word-tile.correct,:root[data-palette] .word-key.correct,.word-legend .correct{background:#18864b;border-color:#18864b;color:#ffffff}
+:root[data-palette] .word-tile.present,:root[data-palette] .word-key.present,.word-legend .present{background:#f5b700;border-color:#f5b700;color:#1b1b1b}
+:root[data-palette] .word-tile.absent,:root[data-palette] .word-key.absent,.word-legend .absent{background:#5c6573;border-color:#5c6573;color:#ffffff}
+.wordle-streak{max-width:800px;display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px 18px;padding:18px 20px;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:22px}
+.wordle-streak>div{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.wordle-streak strong{font-size:23px;line-height:1.2}
+.wordle-streak>div:last-of-type strong{font-size:15px}
+.wordle-streak small{width:100%;font-size:11px}
+.wordle-streak p{grid-column:1/-1;font-size:10px;margin:4px 0 0;line-height:1.5}
+@media(max-width:700px){.custom-colours{grid-template-columns:repeat(2,minmax(0,1fr))}.pet-picker{padding:12px}.pet-options{gap:6px}.pet-options button{width:42px;height:42px}.wordle-streak{padding:14px;gap:8px}.wordle-streak strong{font-size:21px}.wordle-streak small{font-size:9px}.wordle-streak>div:last-of-type strong{font-size:12px}.word-legend{gap:5px}.word-legend>span{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 4px;gap:5px}.word-legend strong{font-size:10px}.word-legend small{font-size:9px}}
+
+[data-palette=tesla] .brand{font-size:19px;letter-spacing:.04em;gap:9px;margin-left:0;margin-right:0}@media(max-width:1150px){[data-palette=tesla] .brand{font-size:16px;gap:8px}[data-palette=tesla] .brand-symbol{font-size:20px;padding:7px}}
+
+:root[data-palette=netflix] .game-card:nth-child(n) .card-visual{background:linear-gradient(135deg,#3b141b,#22222a 65%,#141414)}
+:root[data-palette=tesla] .game-card:nth-child(n) .card-visual{background:linear-gradient(130deg,#e5e8ed,#b8c1cd)}
+:root[data-palette=data-phi] .game-card:nth-child(n) .card-visual{background:linear-gradient(125deg,#08de8726,#03e4e033,#d2f24619)}
+[data-palette=tesla] .topbar .icon-button:hover,[data-palette=amazon] .topbar .icon-button:hover{background:#ffffff20}

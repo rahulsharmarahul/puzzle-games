@@ -178,7 +178,7 @@ The app uses semantic controls, labels, visible focus, reduced-motion preference
 
 ## Appearance and compact home
 
-Settings offers 14 preset palettes: Garden light/dark, Tesla, Apple, Microsoft, Google, Netflix, Spotify, Amazon, GitHub, Data-phi.ai, Ocean, Sunset and Lavender, plus Custom. Company names describe colour inspirations; the interface uses original styling and no downloaded logos or fonts. Data-phi.ai uses charcoal, mint and cyan inspired by https://data-phi.ai/. Custom lets you choose the page background and accent; card surfaces and readable text/button/link colours are calculated automatically. The top-bar sun button cycles presets. Appearance is saved on this device and included when exporting/restoring settings in backups.
+Settings offers 14 preset palettes: Garden light/dark, Tesla, Apple, Microsoft, Google, Netflix, Spotify, Amazon, GitHub, Data-phi.ai, Ocean, Sunset and Lavender, plus Custom. Company names describe colour inspirations; the interface uses original styling and no downloaded logos or fonts. Data-phi.ai uses charcoal, mint and cyan inspired by https://data-phi.ai/. Every theme has six palette colours used across buttons, navigation, card art, highlights and surfaces. Presets also change shapes and typography: Netflix uses a dark cinema look, Tesla uses graphite/red with sharper panels, and Apple uses soft rounded surfaces. Custom offers six controls: page background, main accent, secondary, highlight, card accent and navigation accent; readable text/button/link colours and card surfaces are calculated automatically. The top-bar sun button cycles presets. Appearance is saved on this device and included when exporting/restoring settings in backups.
 
 The large home banner is removed. Compact game cards show four per row on wide desktops, three on smaller desktops and two or one on tablets/phones. Today's Sudoku is still available from the small daily-challenge button beside the collection heading. Gameplay feedback and distinct board colours remain visible across themes.
 
@@ -187,3 +187,11 @@ The large home banner is removed. Compact game cards show four per row on wide d
 Use the star on any home-page game card to add or remove a favorite. Favorites appear first, followed by every other game; each group keeps the standard collection order. Choices belong to the active player, survive refresh/offline use, travel in profile backups, and synchronize when that player is linked through Family sync. Old saves without favorites keep their original game order.
 
 The [browser gameplay audit](QA_REPORT.md) records full play-throughs of all ten games, computer-opponent checks and the feedback fixes found during gameplay. Sea Battle retains outgoing/incoming shot summaries and shows hit/miss/sunk results on the same-device handoff; UNO and Trump handoffs retain their public action/trick notices.
+
+## Petdoku pals and Wordle feedback
+
+Choose from 12 Petdoku pals (Cat, Panda, Puppy, Bunny, Fox, Koala, Bear, Tiger, Frog, Penguin, Hamster and Unicorn) in Settings or above any Petdoku board. Pet selection survives reload and appearance backup restoration. Each device can use its own pet on an online board. Eight brighter region colours keep the numbered regions easy to distinguish in light and dark themes.
+
+Wordle always uses three fixed feedback colours: green for the correct letter/position, amber for a letter elsewhere in the word, and slate grey for an absent or extra copy. The legend is above the grid. This feedback does not inherit a company theme's accent colours.
+
+Wordle's daily streak shows current consecutive winning days, best streak and today's result. A date counts once even across solo/cooperative modes; any daily win for that date counts, and a later loss does not erase that day's win. A missed day or a daily loss without a win resets the current streak. Free play and random online-room matches do not affect the daily streak. Results are stored per player, included in backups, and shared through Family sync. Retained older daily-win history is adopted; lifetime best and daily records remain after recent match history is pruned.
