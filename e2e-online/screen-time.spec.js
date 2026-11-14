@@ -1,0 +1,20 @@
+import {test,expect} from '@playwright/test';
+const web='http://localhost:4173/puzzle-games/',service=process.env.ONLINE_SERVICE||'http://127.0.0.1:8787';
+async function sync(page){await page.goto(web+'#profiles');await page.getByRole('button',{name:'Sync now',exact:true}).click();await expect(page.locator('.family-sync .connection-status')).toHaveText('Up to date',{timeout:20000});}
+test('named family screen time combines devices, syncs offline time and deduplicates retries without changing game revisions',async({browser})=>{
+  const devices=[];
+  for(let i=0;i<2;i++){const context=await browser.newContext();await context.addInitScript(service=>localStorage.setItem('pz:online-config',JSON.stringify({endpoint:service})),service);const page=await context.newPage();await page.goto(web+'#profiles');devices.push({context,page});}
+  const [a,b]=devices;await expect(a.page.locator('.profile-card h2')).toHaveText(['Rahul','Neha','Aparna']);await a.page.getByRole('button',{name:'Create shared family',exact:true}).click();await sync(a.page);const code=(await a.page.locator('.family-code').textContent()).replaceAll('-','');
+  await b.page.getByRole('textbox',{name:'Family code',exact:true}).fill(code);await b.page.getByRole('button',{name:'Join shared family',exact:true}).click();await sync(b.page);await b.page.locator('.profile-card').filter({has:b.page.getByRole('heading',{name:'Rahul',exact:true})}).getByRole('button',{name:'Switch player',exact:true}).click();const id=await a.page.evaluate(()=>JSON.parse(localStorage.getItem('pz:profiles')).data.active);
+  const totals=page=>page.evaluate(id=>{const usage=JSON.parse(localStorage.getItem('pz:screen:'+id)||'null')?.data;return Object.values(usage?.sources||{}).reduce((sum,s)=>sum+Object.values(s.games).reduce((a,b)=>a+b,0),0);},id);
+  await a.page.goto(web+'#club/2048');await a.page.getByRole('button',{name:'Start game',exact:true}).click();await a.page.bringToFront();await a.page.waitForTimeout(1100);await sync(a.page);const first=await totals(a.page);expect(first).toBeGreaterThanOrEqual(1000);await expect.poll(()=>totals(b.page),{timeout:20000}).toBe(first);
+  await b.page.goto(web+'#club/wordle');await b.page.getByRole('button',{name:'Start game',exact:true}).click();await b.page.bringToFront();await b.page.waitForTimeout(1100);await sync(b.page);const second=await totals(b.page);expect(second).toBeGreaterThanOrEqual(first+1000);await expect.poll(()=>totals(a.page),{timeout:20000}).toBe(second);
+  await b.page.goto(web+'#club/flood');await b.page.getByRole('button',{name:'Start game',exact:true}).click();await sync(b.page);await b.page.goto(web+'#club/flood');await b.context.setOffline(true);await b.page.bringToFront();await b.page.waitForTimeout(1100);await b.page.goto(web+'#profiles');const offline=await totals(b.page);expect(offline).toBeGreaterThan(second);await b.context.setOffline(false);await sync(b.page);await expect.poll(()=>totals(a.page),{timeout:20000}).toBe(offline);
+  const result=await a.page.evaluate(async({service,code,id})=>{
+    const api=async payload=>{const r=await fetch(`${service}/families/${code}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw Error(await r.text());return r.json();};
+    const before=(await api({type:'head'})).family.profiles.find(p=>p.id===id).revision,usage=n=>({version:1,sources:{['retry-'+n]:{games:{blast:n*1000},days:{}}}});
+    await Promise.all([1,2].map(n=>api({type:'screen',profileId:id,screenTime:usage(n)})));await api({type:'screen',profileId:id,screenTime:usage(1)});const screen=await api({type:'screen',profileId:id}),after=(await api({type:'head'})).family.profiles.find(p=>p.id===id).revision;
+    return {extra:screen.screenTime.sources['retry-1'].games.blast+screen.screenTime.sources['retry-2'].games.blast,before,after};
+  },{service,code,id});expect(result.extra).toBe(3000);expect(result.after).toBe(result.before);await expect(a.page.locator('.family-conflict')).toHaveCount(0);await expect(b.page.locator('.family-conflict')).toHaveCount(0);
+  await a.context.close();await b.context.close();
+});

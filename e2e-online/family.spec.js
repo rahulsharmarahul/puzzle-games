@@ -1,7 +1,7 @@
 import {answerFor} from '../src/engines/wordle.js';
 import {test,expect} from '@playwright/test';
 const web='http://localhost:4173/puzzle-games/',service=process.env.ONLINE_SERVICE||'http://127.0.0.1:8787';
-async function device(browser,name){const context=await browser.newContext();await context.addInitScript(({name,service})=>{localStorage.setItem('pz:online-config',JSON.stringify({endpoint:service}));if(!localStorage.getItem('pz:profiles'))localStorage.setItem('pz:profiles',JSON.stringify({version:1,data:{active:name,profiles:[{id:name,name,avatar:'🌿'}]}}));},{name,service});const page=await context.newPage();await page.goto(web+'#profiles');return {context,page};}
+async function device(browser,name){const context=await browser.newContext();await context.addInitScript(({name,service})=>{localStorage.setItem('pz:online-config',JSON.stringify({endpoint:service}));if(!localStorage.getItem('pz:profiles'))localStorage.setItem('pz:profiles',JSON.stringify({version:1,data:{familyPreset:true,active:name,profiles:[{id:name,name,avatar:'🌿'}]}}));},{name,service});const page=await context.newPage();await page.goto(web+'#profiles');return {context,page};}
 async function choose(page,name){const card=page.locator('.profile-card').filter({has:page.getByRole('heading',{name,exact:true})});const button=card.getByRole('button',{name:'Switch player',exact:true});if(await button.count())await button.click();}
 async function data(page,id){return page.evaluate(id=>JSON.parse(localStorage.getItem('pz:player:'+id))?.data,id);}
 async function sync(page){await page.goto(web+'#profiles');await page.getByRole('button',{name:'Sync now',exact:true}).click();await expect(page.locator('.family-sync .connection-status')).toHaveText('Up to date',{timeout:20000});}

@@ -13,24 +13,24 @@ class MemoryStorage {
 beforeEach(() => { vi.stubGlobal('localStorage',new MemoryStorage()); vi.stubGlobal('window',new EventTarget()); });
 describe('Profiles, storage and backups', () => {
   it('accepts old saves and bounded unique favorites, and preserves favorites in backups',()=>{
-    const d=store.freshData();expect(store.validData(d)).toBe(true);d.favorites=['uno','sudoku'];expect(store.validData(d)).toBe(true);const meta=store.metadata();store.saveData(meta.active,d);const backup=store.parseBackup(JSON.stringify(store.exportBackup(meta,{})));const restored=store.importBackup(meta,backup);expect(store.loadData(restored.active).favorites).toEqual(['uno','sudoku']);
+    const d=store.freshData();expect(store.validData(d)).toBe(true);d.favorites=['uno','sudoku'];expect(store.validData(d)).toBe(true);const meta=store.metadata();store.saveData(meta.active,d);const backup=store.parseBackup(JSON.stringify(store.exportBackup(meta,{},meta.active)));const restored=store.importBackup(meta,backup);expect(store.loadData(restored.active).favorites).toEqual(['uno','sudoku']);
     for(const favorites of [['uno','uno'],['unknown'],null,'uno',[{}]])expect(store.validData({...d,favorites})).toBe(false);
   });
   it('isolates profiles and resumes exact board, notes, elapsed time and history', () => {
     let meta=store.metadata(); const first=meta.active; meta=store.addProfile(meta,'Second','🐱');
     const g={...createGame('sudoku','hard','save'),elapsed:12345}; let d=store.record(store.freshData(),g,'start'); store.saveData(first,d);
     expect(store.loadData(first).saves.sudoku).toEqual({...g,accounted:12345}); expect(store.loadData(meta.active).saves).toEqual({}); expect(store.validData(d)).toBe(true);
-    store.write('profiles',meta); meta=store.deleteProfile(meta,first); expect(meta.profiles).toHaveLength(1); expect(store.read('player:'+first,null)).toBe(null);
+    store.write('profiles',meta); meta=store.deleteProfile(meta,first); expect(meta.profiles).toHaveLength(3); expect(store.read('player:'+first,null)).toBe(null);
   });
   it('exports, validates and restores new or existing players without mixing data', () => {
     const meta=store.metadata(), g=createGame('petdoku','medium','backup'); store.saveData(meta.active,store.record(store.freshData(),g,'start'));
     const backup=store.parseBackup(JSON.stringify(store.exportBackup(meta,{theme:'dark'},meta.active)));
-    const next=store.importBackup(meta,backup); expect(next.profiles).toHaveLength(2); expect(next.active).not.toBe(meta.active); expect(store.loadData(next.active).saves.petdoku.id).toBe(g.id);
-    const restored=store.importBackup(next,backup,meta.active); expect(restored.profiles).toHaveLength(2);
+    const next=store.importBackup(meta,backup); expect(next.profiles).toHaveLength(4); expect(next.active).not.toBe(meta.active); expect(store.loadData(next.active).saves.petdoku.id).toBe(g.id);
+    const restored=store.importBackup(next,backup,meta.active); expect(restored.profiles).toHaveLength(4);
   });
   it('rejects malformed and hostile backups, invalid puzzle states and future versions', () => {
     for (const text of ['{','null','{}',JSON.stringify({app:'Puzzle Zone',version:99,profiles:[]})]) expect(() => store.parseBackup(text)).toThrow();
-    const meta=store.metadata(), b=store.exportBackup(meta,{}); b.profiles[0].data.saves.sudoku=createGame('sudoku','easy','bad'); b.profiles[0].data.saves.sudoku.solution[0]=99; expect(() => store.parseBackup(JSON.stringify(b))).toThrow();
+    const meta=store.metadata(), b=store.exportBackup(meta,{},meta.active); b.profiles[0].data.saves.sudoku=createGame('sudoku','easy','bad'); b.profiles[0].data.saves.sudoku.solution[0]=99; expect(() => store.parseBackup(JSON.stringify(b))).toThrow();
     b.profiles[0].data.saves={}; b.profiles[0].data.stats['__proto__:easy']={}; expect(() => store.parseBackup(JSON.stringify(b))).toThrow();
   });
   it('handles corrupt JSON and quota errors without crashing', () => {

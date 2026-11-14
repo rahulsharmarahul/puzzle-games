@@ -70,11 +70,11 @@ test('profiles stay independent and backup export/import works',async ({page})=>
   await page.locator('.sidebar').getByRole('link',{name:'Your family'}).click();
   await page.getByRole('button',{name:'+ Add player'}).click(); await page.getByLabel('Player name').fill('Luna'); await page.getByRole('button',{name:'Choose 🐱',exact:true}).click(); await page.getByRole('button',{name:'Save player'}).click();
   expect((await active(page)).saves).toEqual({});
-  await page.getByRole('button',{name:'Switch player',exact:true}).click(); expect((await active(page)).saves.sudoku.id).toBe(saved.id);
+  await page.locator('.profile-card').filter({has:page.getByRole('heading',{name:'Rahul',exact:true})}).getByRole('button',{name:'Switch player',exact:true}).click(); expect((await active(page)).saves.sudoku.id).toBe(saved.id);
   await page.locator('.sidebar').getByRole('link',{name:'Settings',exact:true}).click();
   const downloadPromise=page.waitForEvent('download'); await page.getByRole('button',{name:'Export this player'}).click(); const download=await downloadPromise; const path=await download.path();
   await page.locator('input[type=file]').setInputFiles(path); await page.getByRole('button',{name:'Restore progress',exact:true}).click();
-  expect((await active(page)).saves.sudoku.id).toBe(saved.id); expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('pz:profiles')).data.profiles.length)).toBe(3);
+  expect((await active(page)).saves.sudoku.id).toBe(saved.id); expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('pz:profiles')).data.profiles.length)).toBe(5);
 });
 test('daily completion cannot be counted twice',async ({page})=>{
   await page.goto('./'); await page.getByRole('button',{name:'Try today’s challenge'}).click(); await page.getByRole('button',{name:'Let’s go'}).click(); await page.getByRole('button',{name:'Start playing'}).click();

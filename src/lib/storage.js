@@ -1,3 +1,6 @@
+import {withFamilyPlayers} from './family-presets';
+import {validScreenTime} from './screen-time';
+import {loadScreenTime,mergeStoredScreenTime} from './screen-store';
 import { localDate } from '../engines/puzzles';
 import { levels } from '../engines/random';
 import { makePuzzle } from '../engines/puzzles';
@@ -30,8 +33,11 @@ const uid = () => crypto.randomUUID();
 export const freshData = () => ({ saves: {}, stats: {}, daily: {}, history: [], streak: 0, longest: 0, dailyStreak: 0, longestDaily: 0, lastDate: null });
 export function metadata() {
   const data = read('profiles', null);
-  if (data && Array.isArray(data.profiles) && data.profiles.length && data.profiles.every(p => p && typeof p.id === 'string' && /^[\w-]+$/.test(p.id) && typeof p.name === 'string' && typeof p.avatar === 'string') && data.profiles.some(p => p.id === data.active)) return data;
-  const id = uid(), initial = { profiles: [{ id, name: 'Player one', avatar: '🌿' }], active: id };
+  if (data && Array.isArray(data.profiles) && data.profiles.length && data.profiles.every(p => p && typeof p.id === 'string' && /^[\w-]+$/.test(p.id) && typeof p.name === 'string' && typeof p.avatar === 'string') && data.profiles.some(p => p.id === data.active)) {
+    if(data.familyPreset||read('family-link',null)?.code||data.profiles.some(p=>p.shared))return data;
+    const next=withFamilyPlayers(data);write('profiles',next);return next;
+  }
+  const initial = withFamilyPlayers({profiles:[],active:null});
   try { if (!localStorage.getItem(prefix + 'profiles')) write('profiles', initial); } catch { warning = 'Browser storage is unavailable. Export your progress before closing.'; } return initial;
 }
 export function validSave(g) {
@@ -47,6 +53,7 @@ export function validSave(g) {
 }
 export function validData(d) {
   if (!d || !d.saves || !d.stats || !d.daily || !Array.isArray(d.history) || d.history.length > 500) return false;
+  if (d.screenTime !== undefined && !validScreenTime(d.screenTime)) return false;
   if (d.favorites !== undefined && (!Array.isArray(d.favorites) || d.favorites.length > Object.keys(clubGames).length || new Set(d.favorites).size !== d.favorites.length || !d.favorites.every(game => typeof game === 'string' && Object.hasOwn(clubGames,game)))) return false;
   if (d.club !== undefined && !validClub(d.club,validSave)) return false;
   if (d.online !== undefined && !validOnlineResults(d.online)) return false;
@@ -59,8 +66,8 @@ export function validData(d) {
 }
 export function loadData(id) { const data = read(`player:${id}`, freshData()); if (validData(data)) return data; warning = 'An invalid player save was found. It has been preserved; you can import a backup.'; return freshData(); }
 export const saveData = (id, data, options = {}) => write(`player:${id}`, data, options);
-export function addProfile(meta, name, avatar) { const id = uid(); return { profiles: [...meta.profiles, { id, name: name.trim().slice(0,30) || 'Player', avatar, ...(read('family-link',null)?.code?{shared:true}:{}) }], active: id }; }
-export function deleteProfile(meta, id) { if (meta.profiles.length < 2 || meta.profiles.find(p=>p.id===id)?.shared&&meta.profiles.filter(p=>p.shared).length<2) throw Error('Keep at least one player in the family.'); const profiles = meta.profiles.filter(p => p.id !== id); const next = { profiles, active: meta.active === id ? profiles[0].id : meta.active }; if (write('profiles', next)) { try { localStorage.removeItem(prefix + 'player:' + id); } catch { /* metadata still hides deleted profile */ } } return next; }
+export function addProfile(meta, name, avatar) { const id = uid(); return { ...meta, profiles: [...meta.profiles, { id, name: name.trim().slice(0,30) || 'Player', avatar, ...(read('family-link',null)?.code?{shared:true}:{}) }], active: id }; }
+export function deleteProfile(meta, id) { if (meta.profiles.length < 2 || meta.profiles.find(p=>p.id===id)?.shared&&meta.profiles.filter(p=>p.shared).length<2) throw Error('Keep at least one player in the family.'); const profiles = meta.profiles.filter(p => p.id !== id); const next = { ...meta, profiles, active: meta.active === id ? profiles[0].id : meta.active }; if (write('profiles', next)) { try { localStorage.removeItem(prefix + 'player:' + id); localStorage.removeItem(prefix + 'screen:' + id); } catch { /* metadata still hides deleted profile */ } } return next; }
 const emptyStats = () => ({ started: 0, completed: 0, abandoned: 0, time: 0, completionTime: 0, best: 0, last: 0, mistakes: 0, hints: 0, streak: 0, longest: 0, dailyStreak: 0, longestDaily: 0, lastDate: null, lastCompletedDate: null });
 function touchDate(d) {
   const today = localDate(), yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
@@ -102,7 +109,8 @@ export function summarize(data, game = 'all', difficulty = 'all') {
 }
 export function currentDailyStreak(data) { const y = new Date(); y.setDate(y.getDate()-1); return [localDate(),localDate(y)].includes(data.lastDate) ? data.dailyStreak : 0; }
 export function exportBackup(meta, settings, onlyId, activeData) {
-  return { app: 'Puzzle Zone', version, exportedAt: new Date().toISOString(), settings, profiles: meta.profiles.filter(p => !onlyId || p.id === onlyId).map(p => ({ ...p, data: p.id === meta.active && activeData ? activeData : loadData(p.id) })) };
+  if(typeof window!=='undefined')window.dispatchEvent(new Event('pz-screen-flush'));
+  return { app: 'Puzzle Zone', version, exportedAt: new Date().toISOString(), settings, profiles: meta.profiles.filter(p => !onlyId || p.id === onlyId).map(p => ({ ...p, data: {...(p.id === meta.active && activeData ? activeData : loadData(p.id)),screenTime:loadScreenTime(p.id)} })) };
 }
 export function parseBackup(text) {
   if (text.length > 8_000_000) throw Error('This backup is too large (maximum 8 MB).');
@@ -115,7 +123,9 @@ export function importBackup(meta, backup, targetId = null) {
   const next = structuredClone(meta);
   for (const p of backup.profiles) {
     const id = targetId || uid();
-    if (!saveData(id, p.data)) throw Error('Not enough storage to restore. Existing profiles were preserved.');
+    const {screenTime,...progress}=p.data;
+    if(screenTime&&!mergeStoredScreenTime(id,screenTime))throw Error('Could not restore screen time. Existing progress was preserved.');
+    if (!saveData(id, progress)) throw Error('Not enough storage to restore. Existing profiles were preserved.');
     if (!targetId) next.profiles.push({ id, name: p.name, avatar: p.avatar });
     next.active = id;
   }

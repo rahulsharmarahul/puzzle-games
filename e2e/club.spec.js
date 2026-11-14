@@ -18,13 +18,13 @@ test('Wordle handles two-player guesses, repeated letters, completion and refres
   await start(page,'wordle');const s=(await active(page)).club.sessions.wordle;const answer=answers[hash(`wordle-v1:${s.seed}`)%answers.length],wrong=answers.find(w=>w!==answer);
   await page.keyboard.type('zzzzz');await page.getByRole('button',{name:'Submit guess'}).click();await expect(page.getByRole('status')).toContainText('offline word list');expect((await active(page)).club.sessions.wordle.state.guesses).toHaveLength(0);
   for(let i=0;i<5;i++)await page.getByRole('button',{name:'Delete letter'}).click();
-  await page.keyboard.type(wrong);await page.getByRole('button',{name:'Submit guess'}).click();expect((await active(page)).club.sessions.wordle.state.turn).toBe(1);await expect(page.locator('.current-turn')).toContainText('Player two');
+  await page.keyboard.type(wrong);await page.getByRole('button',{name:'Submit guess'}).click();expect((await active(page)).club.sessions.wordle.state.turn).toBe(1);await expect(page.locator('.current-turn')).toContainText('Neha');
   await page.reload();for(let i=0;i<5;i++)await expect(page.locator('.word-row').first().locator('.word-tile').nth(i)).toHaveAttribute('aria-label',new RegExp(`^${wrong[i]},`));
   await page.keyboard.type(answer);await page.getByRole('button',{name:'Submit guess'}).click();await expect(page.locator('.match-result')).toContainText('Solved together');expect((await active(page)).club.history).toHaveLength(1);
   await page.reload();expect((await active(page)).club.history).toHaveLength(1);
 });
 test('Checkers supports alternating human turns and a computer response',async({page})=>{
-  await start(page,'checkers');await page.getByRole('button',{name:/^Row 6, column 1,/}).click();await page.getByRole('button',{name:/^Row 5, column 2,.*legal move/}).click();expect((await active(page)).club.sessions.checkers.state.turn).toBe(1);await expect(page.locator('.current-turn')).toContainText('Player two');
+  await start(page,'checkers');await page.getByRole('button',{name:/^Row 6, column 1,/}).click();await page.getByRole('button',{name:/^Row 5, column 2,.*legal move/}).click();expect((await active(page)).club.sessions.checkers.state.turn).toBe(1);await expect(page.locator('.current-turn')).toContainText('Neha');
   await page.reload();expect((await active(page)).club.sessions.checkers.state.board[33]).toBe(1);
   await page.getByRole('button',{name:'New game',exact:true}).click();await page.getByRole('combobox',{name:'Play mode',exact:true}).selectOption('solo');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Start new session'}).click();
   await page.getByRole('button',{name:/^Row 6, column 1,/}).click();await page.getByRole('button',{name:/^Row 5, column 2,.*legal move/}).click();await expect.poll(async()=>(await active(page)).club.sessions.checkers.state.turn).toBe(0);
@@ -39,15 +39,15 @@ test('Dots and Boxes keeps the scoring turn and completes a real local match',as
 test('Flappy Jump runs two equal-course flights and saves the score result',async({page})=>{
   await start(page,'flappy');const first=(await active(page)).club.sessions.flappy.state.flight;
   await page.getByRole('button',{name:'Start flight',exact:true}).click();await expect.poll(async()=>(await active(page)).club.sessions.flappy.state.round,{timeout:10000}).toBe(1);
-  const next=(await active(page)).club.sessions.flappy.state.flight;expect(next.pipes).toEqual(first.pipes);await expect(page.locator('.current-turn')).toContainText('Player two');
+  const next=(await active(page)).club.sessions.flappy.state.flight;expect(next.pipes).toEqual(first.pipes);await expect(page.locator('.current-turn')).toContainText('Neha');
   await page.getByRole('button',{name:'Start flight',exact:true}).click();await expect(page.locator('.match-result')).toBeVisible({timeout:10000});expect((await active(page)).club.sessions.flappy.state.scores).toHaveLength(2);expect((await active(page)).club.history[0].game).toBe('flappy');
 });
 for(const game of ['sudoku','petdoku'])test(`${game} cooperative turn-taking preserves solo saves and resumes`,async({page})=>{
   await page.goto('./');await page.getByRole('button',{name:`Play ${game==='sudoku'?'Sudoku':'Petdoku'}`,exact:true}).click();await page.getByRole('button',{name:'Let’s go'}).click();await page.getByRole('button',{name:'Start playing'}).click();await page.getByRole('button',{name:'Hint',exact:true}).click();
   await page.getByRole('button',{name:'Back to play',exact:true}).click();const solo=(await active(page)).saves[game];
-  await start(page,game);await page.getByRole('button',{name:'Start playing'}).click();await page.getByRole('button',{name:'Hint',exact:true}).click();await expect(page.locator('.current-turn')).toContainText('Player two');
+  await start(page,game);await page.getByRole('button',{name:'Start playing'}).click();await page.getByRole('button',{name:'Hint',exact:true}).click();await expect(page.locator('.current-turn')).toContainText('Neha');
   expect((await active(page)).saves[game]).toEqual(solo);expect((await active(page)).club.sessions[game].state.hints).toBe(1);
-  await page.reload();await page.getByRole('button',{name:'Resume puzzle'}).click();await expect(page.locator('.current-turn')).toContainText('Player two');
+  await page.reload();await page.getByRole('button',{name:'Resume puzzle'}).click();await expect(page.locator('.current-turn')).toContainText('Neha');
   const shared=(await active(page)).club.sessions[game].state;
   const remaining=game==='sudoku'?shared.board.filter(n=>!n).length:shared.solution.filter(i=>shared.board[i]!==2).length;
   for(let i=0;i<remaining;i++)await page.getByRole('button',{name:'Hint',exact:true}).click();

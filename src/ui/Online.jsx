@@ -12,7 +12,7 @@ import OnlinePuzzle from './OnlinePuzzle';
 import OnlineFlight from './OnlineFlight';
 
 const onlineGame=id=>Object.hasOwn(clubGames,id)&&clubGames[id].online!==false;
-export default function Online({meta,onResult,petId,onPetChange,wordleClub}) {
+export default function Online({meta,onResult,petId,onPetChange,wordleClub,onScreenGame}) {
   const profile=meta.profiles.find(p=>p.id===meta.active),routeCode=location.hash.split('/')[1]||'',initialCode=/^[A-Z2-9]{8}$/.test(routeCode)?routeCode:'';
   const gameParam=new URLSearchParams(location.hash.split('?')[1]||'').get('game');
   const [base,setBase]=useState(''),[configured,setConfigured]=useState(false),[urlInput,setUrlInput]=useState(''),[game,setGame]=useState(onlineGame(gameParam)?gameParam:'checkers'),[difficulty,setDifficulty]=useState('easy'),[size,setSize]=useState(4),[playerCount,setPlayerCount]=useState(2),[code,setCode]=useState(initialCode),[credential,setCredential]=useState(()=>initialCode?roomCredential(profile.id,initialCode):null),[room,setRoom]=useState(null),[status,setStatus]=useState('idle'),[error,setError]=useState(''),[busy,setBusy]=useState(false),[working,setWorking]=useState(false),[copied,setCopied]=useState(false),[showConfig,setShowConfig]=useState(false),[tick,setTick]=useState(0);
@@ -23,6 +23,7 @@ export default function Online({meta,onResult,petId,onPetChange,wordleClub}) {
     const changed=()=>{const hash=location.hash.slice(1);if(hash===internalRoute.current){internalRoute.current=null;return;}if(!hash.startsWith('online'))return;const target=hash.split('/')[1]||'';setError('');setRoom(null);if(/^[A-Z2-9]{8}$/.test(target)){setCode(target);setCredential(roomCredential(profile.id,target));}else{setCode('');setCredential(null);const requested=new URLSearchParams(hash.split('?')[1]||'').get('game');if(onlineGame(requested))setGame(requested);}};
     addEventListener('hashchange',changed);return()=>removeEventListener('hashchange',changed);
   },[profile.id]);
+  useEffect(()=>{onScreenGame?.(room?.phase==='playing'?room.game:null);return()=>onScreenGame?.(null);},[room?.game,room?.phase,onScreenGame]);
   const report=useRef(onResult);report.current=onResult;
   useEffect(()=>{if(room?.phase==='complete'&&Number.isInteger(credential?.seat)&&credential.seat<room.players.length)report.current?.(room,credential.seat);},[room?.code,room?.phase,credential?.seat]);
   useEffect(()=>{let live=true;endpoint().then(value=>{if(live){setBase(value);setUrlInput(value);setConfigured(true);}}).catch(()=>{if(live){setConfigured(true);setError('Could not load the online connection settings.');}});return()=>{live=false;};},[]);

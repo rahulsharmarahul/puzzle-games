@@ -5,18 +5,19 @@ import BlockBlast from './BlockBlast';
 import WordleStreak from './WordleStreak';
 import {tableGames,maxPlayers} from '../engines/table';
 import LocalTable from './LocalTable';
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { clubGames, createSession } from '../lib/club';
 import { localDate } from '../engines/puzzles';
 import BoardGames from './BoardGames';
 import WordGame from './WordGame';
 import FlappyGame from './FlappyGame';
 const Puzzle = lazy(()=>import('./Game'));
-export default function Club({game,meta,data,onSave,petId,onPetChange}) {
+export default function Club({game,meta,data,onSave,petId,onPetChange,onScreenGame}) {
   const info=clubGames[game],saved=data.club?.sessions[game],profile=meta.profiles.find(p=>p.id===meta.active);
   const [setup,setSetup]=useState(!saved),[mode,setMode]=useState(['sudoku','petdoku'].includes(game)?'local':'solo'),[partner,setPartner]=useState(meta.profiles.find(p=>p.id!==meta.active)?.id||'guest'),[guest,setGuest]=useState('Player two'),[difficulty,setDifficulty]=useState('easy'),[size,setSize]=useState(4),[daily,setDaily]=useState(true),[error,setError]=useState('');
   const [playerCount,setPlayerCount]=useState(2),[extra,setExtra]=useState([{id:'guest',name:'Player 3'},{id:'guest',name:'Player 4'}]);
   const current=useRef(saved);current.current=saved;
+  useEffect(()=>{onScreenGame?.(!setup&&saved?.status==='playing'?game:null);return()=>onScreenGame?.(null);},[setup,game,saved?.status,onScreenGame]);
   if(!info)return <p>Choose a game from the home page.</p>;
   const puzzle=['sudoku','petdoku'].includes(game);
   function start(){

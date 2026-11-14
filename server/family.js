@@ -1,3 +1,4 @@
+import {validScreenTime,emptyScreenTime,mergeScreenTime} from '../src/lib/screen-time.js';
 import { DurableObject } from 'cloudflare:workers';
 import { validData } from '../src/lib/storage.js';
 export const FAMILY_TTL=180*24*60*60*1000;
@@ -33,10 +34,22 @@ export class FamilyGroup extends DurableObject {
           for(const p of profiles)if(!Number.isInteger(p.revision))p.revision=0;
           const removed=this.head.profiles.filter(p=>!profiles.some(n=>n.id===p.id));
           const next={...this.head,profiles,revision:this.head.revision+1,rosterRevision:this.head.rosterRevision+1,updated:now};
-          await this.ctx.storage.transaction(async tx=>{for(const p of removed){const manifest=await tx.get('profile:'+p.id);if(manifest)await tx.delete(Array.from({length:manifest.chunks},(_,i)=>`data:${p.id}:${i}`));await tx.delete('profile:'+p.id);}await tx.put('head',next);});
+          await this.ctx.storage.transaction(async tx=>{for(const p of removed){const manifest=await tx.get('profile:'+p.id);if(manifest)await tx.delete(Array.from({length:manifest.chunks},(_,i)=>`data:${p.id}:${i}`));await tx.delete('profile:'+p.id);const screen=await tx.get('screen:'+p.id);if(screen)await tx.delete(Array.from({length:screen.chunks},(_,i)=>`screen-data:${p.id}:${i}`));await tx.delete('screen:'+p.id);}await tx.put('head',next);});
           this.head=next;this.broadcast();return response({family:this.head});
         }
         const member=this.head.profiles.find(p=>p.id===input.profileId);if(!member)return response({error:'That player is no longer in this shared family.'},404);
+        if(input.type==='screen'){
+          const manifest=await this.ctx.storage.get('screen:'+member.id),keys=Array.from({length:manifest?.chunks||0},(_,i)=>`screen-data:${member.id}:${i}`),chunks=keys.length?await this.ctx.storage.get(keys):new Map();
+          const current=keys.length?JSON.parse(keys.map(k=>chunks.get(k)).join('')):emptyScreenTime();
+          if(input.screenTime===undefined)return response({screenTime:current,revision:member.screenRevision||0});
+          if(!validScreenTime(input.screenTime))return response({error:'Invalid screen-time data. Your saved game was kept.'},400);
+          const combined=mergeScreenTime(current,input.screenTime),serialized=JSON.stringify(combined);
+          if(!validScreenTime(combined)||serialized.length>2000000)return response({error:'Screen-time storage is full. Export a family backup.'},413);
+          if(serialized===JSON.stringify(current))return response({screenTime:current,revision:member.screenRevision||0,family:this.head});
+          const count=Math.ceil(serialized.length/CHUNK),revision=(member.screenRevision||0)+1,next={...this.head,revision:this.head.revision+1,updated:now,profiles:this.head.profiles.map(p=>p.id===member.id?{...p,screenRevision:revision}:p)};
+          await this.ctx.storage.transaction(async tx=>{const values={};for(let i=0;i<count;i++)values[`screen-data:${member.id}:${i}`]=serialized.slice(i*CHUNK,(i+1)*CHUNK);await tx.put(values);if(manifest?.chunks>count)await tx.delete(Array.from({length:manifest.chunks-count},(_,i)=>`screen-data:${member.id}:${count+i}`));await tx.put('screen:'+member.id,{chunks:count});await tx.put('head',next);});
+          this.head=next;this.broadcast();return response({screenTime:combined,revision,family:this.head});
+        }
         const manifest=await this.ctx.storage.get('profile:'+member.id);
         if(input.type==='pull'){
           if(!manifest)return response({revision:0,data:null});
