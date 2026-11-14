@@ -1,5 +1,17 @@
 import {test,expect} from '@playwright/test';
 import {wordFeedback,answerFor} from '../src/engines/wordle.js';
+test.describe('phone keyboard entry',()=>{
+  test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  test('native text entry submits successive guesses, deletes letters, shows feedback and disables after solving',async({page})=>{
+    await page.goto('./#club/wordle');await page.getByRole('combobox',{name:'Word selection',exact:true}).selectOption('free');await page.getByRole('button',{name:'Start game',exact:true}).click();
+    const field=page.getByRole('textbox',{name:'Type your Wordle guess'}),answer=answerFor((await session(page)).seed),words=['MINES','BOOKS','CLOUD'].filter(word=>word!==answer);
+    await field.tap();await expect(field).toBeFocused();await expect(field).toHaveAttribute('inputmode','text');await expect(field).toHaveAttribute('enterkeyhint','go');await expect(field).toHaveAttribute('autocorrect','off');
+    await field.fill('abc');await field.press('Backspace');await expect(field).toHaveValue('AB');await field.press('Enter');await expect(page.locator('.word-message')).toContainText('Enter five letters');expect((await session(page)).state.guesses).toHaveLength(0);
+    await field.fill(words[0].toLowerCase());await field.press('Enter');await expect(field).toHaveValue('');await expect(field).toBeFocused();expect((await session(page)).state.guesses).toEqual([words[0]]);await expect(page.locator('.word-row').first().locator('.correct,.present,.absent')).toHaveCount(5);
+    await field.fill(words[1]);await page.getByRole('button',{name:'Check word',exact:true}).tap();expect((await session(page)).state.guesses).toEqual(words.slice(0,2));await expect(field).toBeFocused();
+    await field.fill(answer);await field.press('Enter');await expect(field).toBeDisabled();await expect(page.getByRole('button',{name:'Check word',exact:true})).toBeDisabled();await expect(page.locator('.match-result')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  });
+});
 async function session(page){return page.evaluate(()=>{const meta=JSON.parse(localStorage.getItem('pz:profiles')).data;return JSON.parse(localStorage.getItem('pz:player:'+meta.active)).data.club.sessions.wordle;});}
 for(const mode of ['solo','local'])test(`Wordle Enter submits after tapping letters in ${mode} play and marks every position`,async({page,context})=>{
   await page.goto('./#club/wordle');await page.getByRole('combobox',{name:'Play mode',exact:true}).selectOption(mode);await page.getByRole('combobox',{name:'Word selection',exact:true}).selectOption('free');await page.getByRole('button',{name:'Start game',exact:true}).click();

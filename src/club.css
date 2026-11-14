@@ -5,3 +5,5 @@
 @media(max-width:360px){.club-board{padding:12px}.word-grid{gap:5px}.word-row{gap:5px}.word-key{font-size:11px}.word-key[aria-label="Submit guess"]{font-size:8px}.checker-piece{font-size:18px}.player-chip{min-width:120px}.flight-controls{gap:8px}.flight-controls .button{padding:10px 12px}.flight-controls strong{font-size:12px}.club-heading h1{font-size:27px}}
 
 .word-game:focus{outline:none}
+
+.word-native-entry{max-width:360px;margin:18px auto}.word-native-entry label{display:block;font-size:12px;font-weight:600;margin-bottom:8px}.word-native-entry>div{display:flex;gap:8px}.word-native-entry input{width:100%;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);padding:10px;font-size:16px;text-transform:uppercase;letter-spacing:2px}.word-native-entry input::placeholder{font-size:12px;text-transform:none;letter-spacing:0}.word-native-entry .button{white-space:nowrap;padding:10px 12px}
