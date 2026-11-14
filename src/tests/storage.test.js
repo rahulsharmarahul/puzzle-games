@@ -12,6 +12,10 @@ class MemoryStorage {
 }
 beforeEach(() => { vi.stubGlobal('localStorage',new MemoryStorage()); vi.stubGlobal('window',new EventTarget()); });
 describe('Profiles, storage and backups', () => {
+  it('accepts old saves and bounded unique favorites, and preserves favorites in backups',()=>{
+    const d=store.freshData();expect(store.validData(d)).toBe(true);d.favorites=['uno','sudoku'];expect(store.validData(d)).toBe(true);const meta=store.metadata();store.saveData(meta.active,d);const backup=store.parseBackup(JSON.stringify(store.exportBackup(meta,{})));const restored=store.importBackup(meta,backup);expect(store.loadData(restored.active).favorites).toEqual(['uno','sudoku']);
+    for(const favorites of [['uno','uno'],['unknown'],null,'uno',[{}]])expect(store.validData({...d,favorites})).toBe(false);
+  });
   it('isolates profiles and resumes exact board, notes, elapsed time and history', () => {
     let meta=store.metadata(); const first=meta.active; meta=store.addProfile(meta,'Second','🐱');
     const g={...createGame('sudoku','hard','save'),elapsed:12345}; let d=store.record(store.freshData(),g,'start'); store.saveData(first,d);

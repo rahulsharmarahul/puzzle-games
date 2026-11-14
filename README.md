@@ -181,3 +181,7 @@ The app uses semantic controls, labels, visible focus, reduced-motion preference
 Settings offers 14 preset palettes: Garden light/dark, Tesla, Apple, Microsoft, Google, Netflix, Spotify, Amazon, GitHub, Data-phi.ai, Ocean, Sunset and Lavender, plus Custom. Company names describe colour inspirations; the interface uses original styling and no downloaded logos or fonts. Data-phi.ai uses charcoal, mint and cyan inspired by https://data-phi.ai/. Custom lets you choose the page background and accent; card surfaces and readable text/button/link colours are calculated automatically. The top-bar sun button cycles presets. Appearance is saved on this device and included when exporting/restoring settings in backups.
 
 The large home banner is removed. Compact game cards show four per row on wide desktops, three on smaller desktops and two or one on tablets/phones. Today's Sudoku is still available from the small daily-challenge button beside the collection heading. Gameplay feedback and distinct board colours remain visible across themes.
+
+## Favorite games
+
+Use the star on any home-page game card to add or remove a favorite. Favorites appear first, followed by every other game; each group keeps the standard collection order. Choices belong to the active player, survive refresh/offline use, travel in profile backups, and synchronize when that player is linked through Family sync. Old saves without favorites keep their original game order.

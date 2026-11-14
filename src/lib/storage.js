@@ -1,7 +1,7 @@
 import { localDate } from '../engines/puzzles';
 import { levels } from '../engines/random';
 import { makePuzzle } from '../engines/puzzles';
-import { validClub } from './club';
+import { validClub, clubGames } from './club';
 import { validOnlineResults } from './online-results';
 const prefix = 'pz:', version = 1;
 let warning = '';
@@ -47,6 +47,7 @@ export function validSave(g) {
 }
 export function validData(d) {
   if (!d || !d.saves || !d.stats || !d.daily || !Array.isArray(d.history) || d.history.length > 500) return false;
+  if (d.favorites !== undefined && (!Array.isArray(d.favorites) || d.favorites.length > Object.keys(clubGames).length || new Set(d.favorites).size !== d.favorites.length || !d.favorites.every(game => typeof game === 'string' && Object.hasOwn(clubGames,game)))) return false;
   if (d.club !== undefined && !validClub(d.club,validSave)) return false;
   if (d.online !== undefined && !validOnlineResults(d.online)) return false;
   if (!Object.entries(d.saves).every(([k,g]) => ['sudoku','petdoku'].includes(k) && g.game === k && validSave(g))) return false;
