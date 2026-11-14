@@ -46,3 +46,7 @@ every possible game position, browser or physical phone.
 ## Rich themes, pets and Wordle update
 
 The later appearance update adds six-colour palettes and custom controls, distinct Netflix/Tesla styling, 12 pet choices with vivid numbered regions, fixed green/amber/slate Wordle feedback with a top legend, and persistent daily current/best streaks. Four additional browser scenarios cover actual colour/style changes, pet selection and reload, all three feedback colours under company themes, and a daily streak win. Appearance backup restoration also checks the chosen pet. The suite now contains 118 unit cases and 50 offline/local browser scenarios. Online/Family checks include different pets on the same board and a daily streak arriving on another device.
+
+## Fruit Merge and Block Blast expansion
+
+Two more games add deterministic fruit-drop collision/merge physics and an 8x8 three-piece block-placement game. New checks cover chain merges, overflow, simultaneous row/column clears, combos, tray refill, game-over detection, score/best/result deduplication, solo/local modes, refresh, phone layouts, offline play, favorites and profile backup validation. Family tests also transfer unfinished runs for both games. The collection now has twelve games; ten have Online room adapters and the two new games offer solo and same-device play.

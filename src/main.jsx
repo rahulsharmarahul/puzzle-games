@@ -14,6 +14,7 @@ import './family.css';
 import './table.css';
 import './appearance.css';
 import './enhancements.css';
+import './drop-games.css';
 import ThemePicker from './ui/ThemePicker';
 import {normalizeSettings,applyTheme,nextTheme} from './lib/themes';
 import { clubGames, updateClub } from './lib/club';
@@ -23,7 +24,7 @@ const Club = lazy(() => import('./ui/Club'));
 const Online = lazy(() => import('./ui/Online'));
 const Game = lazy(() => import('./ui/Game'));
 const avatars = ['🌿','🐱','🐶','🦊','🐼','🐸','🦋','🌻','🚀','🦉','🐨','🌈'];
-const homeGames=['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea'];
+const homeGames=['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea','fruit','blast'];
 const names = Object.fromEntries(Object.entries(clubGames).map(([key,game])=>[key,game.name]));
 class GameBoundary extends React.Component {
   state = { failed: false };
@@ -143,7 +144,7 @@ function GameCard({ game, onPlay, favorite, onFavorite,petId }) {
 }
 function ArcadeCard({game,favorite,onFavorite}) {
   const info = clubGames[game];
-  return <article className={`game-card arcade-card ${game}`} data-game={game} data-favorite={favorite}><FavoriteButton game={game} selected={favorite} onClick={onFavorite}/><a href={`#club/${game}`} className="card-visual arcade-visual" aria-label={`Explore ${info.name}`}><span className="arcade-symbol" aria-hidden="true">{info.symbol}</span><span className="visual-label">{info.tag}</span></a><div className="game-card-content"><div className="card-title"><h3>{info.name}</h3><span className="pill">SOLO + FRIENDS</span></div><p>{info.description}</p><div className="arcade-mode-note">{info.modes}</div><a className="button primary full" href={`#club/${game}`}>Play {info.name} →</a><a className="shared-play-link" href={`#online?game=${game}`}>Play online · Different devices →</a></div></article>;
+  return <article className={`game-card arcade-card ${game}`} data-game={game} data-favorite={favorite}><FavoriteButton game={game} selected={favorite} onClick={onFavorite}/><a href={`#club/${game}`} className="card-visual arcade-visual" aria-label={`Explore ${info.name}`}><span className="arcade-symbol" aria-hidden="true">{info.symbol}</span><span className="visual-label">{info.tag}</span></a><div className="game-card-content"><div className="card-title"><h3>{info.name}</h3><span className="pill">SOLO + FRIENDS</span></div><p>{info.description}</p><div className="arcade-mode-note">{info.modes}</div><a className="button primary full" href={`#club/${game}`}>Play {info.name} →</a>{info.online!==false&&<a className="shared-play-link" href={`#online?game=${game}`}>Play online · Different devices →</a>}</div></article>;
 }
 function Profiles({ meta, changeMeta, data, sync }) {
   const [editing, setEditing] = useState(null), [name, setName] = useState(''), [avatar,setAvatar] = useState(avatars[0]);

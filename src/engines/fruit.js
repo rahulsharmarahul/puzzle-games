@@ -1,0 +1,21 @@
+import {hash,random} from './random';
+export const fruits=[{name:'Cherry',emoji:'🍒',radius:13,color:'#ed5870'},{name:'Strawberry',emoji:'🍓',radius:17,color:'#f57581'},{name:'Grape',emoji:'🍇',radius:22,color:'#ac89db'},{name:'Mandarin',emoji:'🍊',radius:27,color:'#ffb45a'},{name:'Lemon',emoji:'🍋',radius:32,color:'#f6da6b'},{name:'Apple',emoji:'🍎',radius:38,color:'#ed897d'},{name:'Pear',emoji:'🍐',radius:44,color:'#bed978'},{name:'Peach',emoji:'🍑',radius:50,color:'#ffc1a1'},{name:'Pineapple',emoji:'🍍',radius:58,color:'#e5c679'},{name:'Melon',emoji:'🍈',radius:67,color:'#aed997'},{name:'Watermelon',emoji:'🍉',radius:78,color:'#73bc9c'}];
+export const nextFruit=(seed,drop)=>Math.floor(random(hash(`${seed}:fruit:${drop}`))()*4);
+export function createFruitBoard(seed='fruit'){return {seed,balls:[],drops:0,nextId:0,score:0,merges:0,largest:0,status:'playing'};}
+export function dropFruit(s,x,capture=false){if(s.status!=='playing'||!Number.isFinite(x))return {state:s,frames:[]};const next=structuredClone(s),level=nextFruit(s.seed,s.drops),radius=fruits[level].radius;next.balls.push({id:next.nextId++,level,x:Math.max(radius+5,Math.min(355-radius,x)),y:radius+8,vx:0,vy:0});next.drops++;next.largest=Math.max(next.largest,level);const frames=[];
+  // Fixed-step physics keeps saves and same-course challenges reproducible.
+  for(let step=0;step<420;step++){
+    for(const b of next.balls){b.vy+=720/120;b.x+=b.vx/120;b.y+=b.vy/120;b.vx*=.985;const r=fruits[b.level].radius;if(b.x<r+4){b.x=r+4;b.vx=Math.abs(b.vx)*.18;}if(b.x>356-r){b.x=356-r;b.vx=-Math.abs(b.vx)*.18;}if(b.y>486-r){b.y=486-r;b.vy=-Math.abs(b.vy)*.10;if(Math.abs(b.vy)<12)b.vy=0;}}
+    for(let pass=0;pass<3;pass++)for(let i=0;i<next.balls.length;i++)for(let j=i+1;j<next.balls.length;j++){
+      const a=next.balls[i],b=next.balls[j],ra=fruits[a.level].radius,rb=fruits[b.level].radius,dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),sum=ra+rb;if(d>=sum-.05)continue;
+      if(a.level===b.level){const lev=a.level+1;next.score+=2**(lev+1)*5;next.merges++;next.largest=Math.max(next.largest,Math.min(lev,10));next.balls.splice(j,1);next.balls.splice(i,1);if(lev<fruits.length)next.balls.push({id:next.nextId++,level:lev,x:(a.x+b.x)/2,y:(a.y+b.y)/2,vx:(a.vx+b.vx)/2,vy:Math.min(0,(a.vy+b.vy)/2)});i--;break;}
+      const nx=d>.001?dx/d:(a.id<b.id?1:-1),ny=d>.001?dy/d:0,overlap=sum-Math.max(d,.001),ma=ra*ra,mb=rb*rb;a.x-=nx*overlap*mb/(ma+mb);a.y-=ny*overlap*mb/(ma+mb);b.x+=nx*overlap*ma/(ma+mb);b.y+=ny*overlap*ma/(ma+mb);const relative=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;if(relative<0){const impulse=-(1.02)*relative/(1/ma+1/mb);a.vx-=impulse*nx/ma;a.vy-=impulse*ny/ma;b.vx+=impulse*nx/mb;b.vy+=impulse*ny/mb;}
+    }
+    if(capture&&step%7===0)frames.push(next.balls.map(b=>({...b})));
+  }
+  for(const b of next.balls){const r=fruits[b.level].radius;b.x=Math.max(r+4,Math.min(356-r,b.x));b.y=Math.min(486-r,b.y);b.vx=0;b.vy=0;}
+  if(next.balls.length>=90||next.balls.some(b=>b.y-fruits[b.level].radius<65))next.status='complete';if(capture)frames.push(structuredClone(next.balls));return {state:next,frames};
+}
+export function createFruit(seed){return {seed,board:createFruitBoard(seed),round:0,scores:[],status:'playing',winner:null};}
+export function finishFruit(s,mode){if(s.status!=='playing')return s;const next=structuredClone(s);next.scores.push(s.board.score);if(mode==='local'&&s.round===0){next.round=1;next.board=createFruitBoard(s.seed);}else{next.status='complete';next.board.status='complete';next.winner=mode==='local'?(next.scores[0]===next.scores[1]?'draw':next.scores[0]>next.scores[1]?0:1):0;}return next;}
+export function validFruit(s){const int=(x,a,b)=>Number.isInteger(x)&&x>=a&&x<=b,finite=(x,a,b)=>Number.isFinite(x)&&x>=a&&x<=b,b=s?.board;return s&&typeof s.seed==='string'&&int(s.round,0,1)&&Array.isArray(s.scores)&&s.scores.length<=2&&s.scores.every(x=>int(x,0,1e12))&&['playing','complete'].includes(s.status)&&[null,0,1,'draw'].includes(s.winner)&&b&&b.seed===s.seed&&Array.isArray(b.balls)&&b.balls.length<=100&&new Set(b.balls.map(x=>x?.id)).size===b.balls.length&&b.balls.every(x=>x&&int(x.id,0,1e8)&&int(x.level,0,10)&&finite(x.x,0,360)&&finite(x.y,-1000,500)&&finite(x.vx,-2000,2000)&&finite(x.vy,-2000,2000))&&['drops','nextId','score','merges'].every(k=>int(b[k],0,1e12))&&int(b.largest,0,10)&&['playing','complete'].includes(b.status);}

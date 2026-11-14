@@ -1,6 +1,6 @@
 # Puzzle Zone
 
-A free, mobile-first family game collection: Sudoku, Petdoku, Flappy Jump, Wordle, Checkers, Dots and Boxes, Ludo, UNO, Trump Tricks and Sea Battle, with local profiles, same-device multiplayer, saved sessions, statistics, backups and offline play. React, Vite, JavaScript and plain CSS. Solo and same-device play need no backend or accounts. Optional different-device multiplayer uses a separate Cloudflare Worker; no player email accounts, paid services, advertisements or remote fonts are required.
+A free, mobile-first family game collection: Sudoku, Petdoku, Flappy Jump, Wordle, Checkers, Dots and Boxes, Ludo, UNO, Trump Tricks, Sea Battle, Fruit Merge and Block Blast, with local profiles, same-device multiplayer, saved sessions, statistics, backups and offline play. React, Vite, JavaScript and plain CSS. Solo and same-device play need no backend or accounts. Optional different-device multiplayer uses a separate Cloudflare Worker; no player email accounts, paid services, advertisements or remote fonts are required.
 
 ## Play online from different devices
 
@@ -14,7 +14,7 @@ In **Family**, create a shared family on one device, then enter its private fami
 
 ## New games and same-device multiplayer
 
-The home page has ten game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Each arcade game offers solo computer play or same-device multiplayer. Ludo, UNO and Trump Tricks support 2-4 players, including three-player family matches; Sea Battle supports two. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
+The home page has twelve game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Each arcade game offers solo or same-device play. Ludo, UNO and Trump Tricks support 2-4 players, including three-player family matches; Sea Battle supports two. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
 
 | Game | Solo | Same-device multiplayer |
 | --- | --- | --- |
@@ -195,3 +195,11 @@ Choose from 12 Petdoku pals (Cat, Panda, Puppy, Bunny, Fox, Koala, Bear, Tiger, 
 Wordle always uses three fixed feedback colours: green for the correct letter/position, amber for a letter elsewhere in the word, and slate grey for an absent or extra copy. The legend is above the grid. This feedback does not inherit a company theme's accent colours.
 
 Wordle's daily streak shows current consecutive winning days, best streak and today's result. A date counts once even across solo/cooperative modes; any daily win for that date counts, and a later loss does not erase that day's win. A missed day or a daily loss without a win resets the current streak. Free play and random online-room matches do not affect the daily streak. Results are stored per player, included in backups, and shared through Family sync. Retained older daily-win history is adopted; lifetime best and daily records remain after recent match history is pruned.
+
+## Fruit Merge and Block Blast
+
+**Fruit Merge:** drop fruit into a physics jar by tapping, dragging/releasing, using the position slider, or using arrow keys and the Drop button. Matching fruits combine through an eleven-fruit chain to watermelon; two watermelons merge away for a bonus. The run ends if settled fruit crosses the dashed top line. Pause and Finish run are available. Two-player same-device mode gives each player a separate run with the same seeded fruit sequence; highest score wins. Scores and stable post-drop positions save automatically, so refreshing during the short cosmetic settling animation restores the accepted drop.
+
+**Block Blast:** place three fixed-orientation pieces at a time on an 8x8 board. Filled rows/columns clear simultaneously, including intersections. Each placed block scores one point; each cleared line scores 10 times the current consecutive-clear combo. A non-clearing move resets the combo. A new tray appears after all three pieces are used. The run ends when none of the remaining pieces fits. Tap a tray piece and then its top-left board square, or use desktop drag-and-drop and keyboard arrows/Enter. Two-player same-device mode shares the board and score, alternating after each placement.
+
+Both games support favorites, per-profile saves, personal bests, results, backups, Family progress sync and offline play. Their play modes are solo/same-device; the Online rooms menu contains the ten games supported by that service. Artwork is original canvas/CSS plus system fruit emoji.

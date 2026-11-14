@@ -1,3 +1,5 @@
+import {createBlocks,validBlocks} from '../engines/blocks';
+import {createFruit,validFruit} from '../engines/fruit';
 import {recordWordleDay,validDay,wordleDays,wordleStreak} from './wordle-streak';
 import {tableGames,createTable,maxPlayers,validTable} from '../engines/table';
 import { createCheckers } from '../engines/checkers';
@@ -6,6 +8,8 @@ import { createWordle, guessWord } from '../engines/wordle';
 import { createFlight } from '../engines/flappy';
 import { createGame } from './game';
 export const clubGames = {
+  fruit:{name:'Fruit Merge',symbol:'🍉',tag:'DROP. MERGE. GROW.',description:'Drop matching fruit together and grow a watermelon. Keep your fruit jar from overflowing.',modes:'Solo or two-player score challenge',online:false},
+  blast:{name:'Block Blast',symbol:'▦',tag:'FIT. CLEAR. COMBO.',description:'Fit colourful pieces on the board. Clear rows and columns and build a bigger score.',modes:'Solo or two-player shared board',online:false},
   ludo:{name:'Ludo',symbol:'⚄',tag:'ROLL. RACE. REACH HOME.',description:'Bring four tokens home. Race friends, capture rivals and find the safe squares.',modes:'Computer or 2–4 players'},
   uno:{name:'UNO',symbol:'➕',tag:'COLOUR. MATCH. SAY UNO.',description:'Match colours and symbols, play action cards and empty your hand first.',modes:'Computer or 2–4 players'},
   trump:{name:'Trump Tricks',symbol:'♠',tag:'FOLLOW SUIT. PLAY YOUR TRUMP.',description:'Seven cards, seven tricks. Choose your moment to trump and take the lead.',modes:'Computer or 2–4 players'},
@@ -20,7 +24,7 @@ export const clubGames = {
 export const emptyClub = () => ({sessions:{},history:[],stats:{},daily:{}});
 export function createSession(game,mode,players,{difficulty='easy',size=4,seed=crypto.randomUUID(),daily=null}={}) {
   if(!Object.hasOwn(clubGames,game))throw Error('Unknown game');
-  const state=tableGames.includes(game)?createTable(game,players.length,seed):game==='checkers' ? createCheckers() : game==='dots' ? createDots(size) : game==='wordle' ? createWordle(seed) : game==='flappy' ? {flight:createFlight(seed),round:0,scores:[],status:'playing',winner:null} : createGame(game,difficulty,seed);
+  const state=game==='fruit'?createFruit(seed):game==='blast'?createBlocks(seed):tableGames.includes(game)?createTable(game,players.length,seed):game==='checkers' ? createCheckers() : game==='dots' ? createDots(size) : game==='wordle' ? createWordle(seed) : game==='flappy' ? {flight:createFlight(seed),round:0,scores:[],status:'playing',winner:null} : createGame(game,difficulty,seed);
   return {id:crypto.randomUUID(),game,mode,players:structuredClone(players),seed,daily,state,turn:0,contributions:Array(players.length).fill(0),created:new Date().toISOString(),status:'playing',winner:null};
 }
 export function updateClub(data,session) {
@@ -36,9 +40,10 @@ export function updateClub(data,session) {
     if(session.winner==='draw')stats.draws++;
     else if(session.winner==='team'||session.winner===0)stats.wins++;
     else stats.losses++;
-    if(session.game==='flappy')stats.bestScore=Math.max(stats.bestScore,...session.state.scores);
-    club.history=[{id:session.id,game:session.game,mode:session.mode,players:session.players.map(p=>p.name),winner:session.winner,date:new Date().toISOString(),daily:session.daily,scores:session.game==='flappy' ? session.state.scores : session.game==='dots' ? [0,1].map(p=>session.state.boxes.filter(b=>b===p).length) : null},...club.history].slice(0,500);
+    if(['flappy','fruit'].includes(session.game))stats.bestScore=Math.max(stats.bestScore,...session.state.scores);if(session.game==='blast')stats.bestScore=Math.max(stats.bestScore,session.state.score);
+    club.history=[{id:session.id,game:session.game,mode:session.mode,players:session.players.map(p=>p.name),winner:session.winner,date:new Date().toISOString(),daily:session.daily,scores:['flappy','fruit'].includes(session.game) ? session.state.scores : session.game==='blast'?[session.state.score] : session.game==='dots' ? [0,1].map(p=>session.state.boxes.filter(b=>b===p).length) : null},...club.history].slice(0,500);
   }
+  if(['fruit','blast'].includes(session.game)){club.stats||={};const stats=club.stats[session.game]||={played:0,wins:0,losses:0,draws:0,bestScore:0};stats.bestScore=Math.max(stats.bestScore,session.game==='fruit'?session.state.board.score:session.state.score,...(session.state.scores||[]));}
   Object.assign(club,recordWordleDay(club,session));
   return {...data,club};
 }
@@ -52,6 +57,7 @@ export function validSession(s,validPuzzle) {
   const st=s.state;
   if(s.daily!==null && (s.game!=='wordle'||!/^wordle-v1:\d{4}-\d{2}-\d{2}$/.test(s.daily)||s.seed!==s.daily))return false;
   if(!st || !['playing','complete'].includes(st.status) || st.status!==s.status || (!['sudoku','petdoku'].includes(s.game)&&st.winner!==s.winner))return false;
+  if(s.game==='fruit')return validFruit(st);if(s.game==='blast')return validBlocks(st);
   if(tableGames.includes(s.game))return validTable(s.game,st,s.players.length);
   if(['sudoku','petdoku'].includes(s.game)) return s.mode==='local' && st.game===s.game && validPuzzle({...st,status:'playing'});
   if(s.game==='checkers') return Array.isArray(st.board)&&st.board.length===64&&st.board.every((p,i)=>integer(p,-2,2)&&(!p||(Math.floor(i/8)+i%8)%2===1))&&integer(st.turn,0,1)&&(st.forced===null||integer(st.forced,0,63))&&integer(st.quiet,0,1e8)&&st.positions&&typeof st.positions==='object'&&Object.keys(st.positions).length<=1000&&Object.values(st.positions).every(n=>integer(n,1,3));
