@@ -53,6 +53,7 @@
 .pet-picker{max-width:760px;margin:15px 0 23px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
 .pet-picker-heading{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:11px}
 .pet-picker-heading>span{color:var(--muted)}
+.pet-picker-heading{align-items:center}.pet-picker-heading>div{display:flex;flex-direction:column;gap:4px}.pet-picker-heading>div>span{color:var(--muted);font-size:11px}.pet-random{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--green);font-size:11px;white-space:nowrap}.pet-random>span{font-size:17px}
 .pet-options{display:flex;gap:7px;flex-wrap:wrap}
 .pet-options button{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);background:var(--soft);border-radius:10px;flex-shrink:0}
 .pet-options button span{font-size:27px;line-height:1}
