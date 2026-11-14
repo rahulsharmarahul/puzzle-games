@@ -185,3 +185,5 @@ The large home banner is removed. Compact game cards show four per row on wide d
 ## Favorite games
 
 Use the star on any home-page game card to add or remove a favorite. Favorites appear first, followed by every other game; each group keeps the standard collection order. Choices belong to the active player, survive refresh/offline use, travel in profile backups, and synchronize when that player is linked through Family sync. Old saves without favorites keep their original game order.
+
+The [browser gameplay audit](QA_REPORT.md) records full play-throughs of all ten games, computer-opponent checks and the feedback fixes found during gameplay. Sea Battle retains outgoing/incoming shot summaries and shows hit/miss/sunk results on the same-device handoff; UNO and Trump handoffs retain their public action/trick notices.

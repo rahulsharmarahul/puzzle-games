@@ -5,3 +5,5 @@
 .ludo-home{border:1px solid #8f9d82}.home-0{background:#e9bfba}.home-1{background:#bed4b9}.home-2{background:#eddda6}.home-3{background:#bfd0df}
 
 .sea-cell{position:relative}.sea-coordinate{position:absolute;top:1px;left:2px;font-size:7px;font-weight:500;opacity:.85;line-height:1}.sea-cell>span{line-height:1}
+
+.handoff-public-result{background:var(--soft);border:1px solid var(--line);padding:12px 18px;border-radius:9px;margin:8px 0 20px;color:var(--text);font-size:14px}.handoff-public-result strong,.handoff-public-result span{display:block}.sea-shot-summary{display:flex;justify-content:center;flex-wrap:wrap;gap:10px 20px;font-size:12px;margin:15px 0;padding:12px;background:var(--soft);border-radius:8px;color:var(--text)}
