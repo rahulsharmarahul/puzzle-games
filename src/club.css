@@ -3,3 +3,5 @@
 .club-total-row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:13px 0;font-size:13px}.club-total-row span{color:var(--muted);font-size:12px}.club-totals{margin:20px 0}
 .club-page .game-heading{display:flex;justify-content:flex-end;margin:10px 0}.club-page .game-heading>div{display:none}.club-page .game-heading>.button{margin:0;min-height:44px;font-size:12px}.player-chip strong,.host-player>span,.continue-card strong{overflow-wrap:anywhere}.player-chip>span:last-child{min-width:0}
 @media(max-width:360px){.club-board{padding:12px}.word-grid{gap:5px}.word-row{gap:5px}.word-key{font-size:11px}.word-key[aria-label="Submit guess"]{font-size:8px}.checker-piece{font-size:18px}.player-chip{min-width:120px}.flight-controls{gap:8px}.flight-controls .button{padding:10px 12px}.flight-controls strong{font-size:12px}.club-heading h1{font-size:27px}}
+
+.word-game:focus{outline:none}
