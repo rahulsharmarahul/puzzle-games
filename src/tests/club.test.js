@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createCheckers, checkerMoves, moveChecker, checkerBot } from '../engines/checkers';
 import { createDots, drawEdge, dotScores, dotsBot } from '../engines/dots';
 import { answerFor, createWordle, guessWord, wordFeedback } from '../engines/wordle';
-import { answers } from '../data/words';
+import { answers, vocabulary } from '../data/words';
 import { createFlight, stepFlight, pipeAt, flight } from '../engines/flappy';
 import { createSession, updateClub, validSession, validClub } from '../lib/club';
 import { freshData, validData, validSave, parseBackup, exportBackup, saveData, loadData, metadata } from '../lib/storage';
@@ -22,6 +22,13 @@ describe('Dots and Boxes',()=>{
   it('computer closes a box before giving the turn away',()=>{const s=createDots(2);s.h[0]=0;s.h[2]=0;s.v[0]=0;const m=dotsBot(s);expect(m).toMatchObject({axis:'v',index:1});});
 });
 describe('Word game',()=>{
+  it('accepts common plurals such as MINES and scores them before allowing a second guess',()=>{
+    expect(vocabulary.size).toBeGreaterThan(12000);
+    let s=createWordle('mines-regression');const answer=answerFor(s.seed);
+    for(const word of ['MINES','BOOKS','CODES','HOMES','PLAYS','WALKS'])expect(vocabulary.has(word)).toBe(true);
+    s=guessWord(s,'mines').state;expect(s.guesses).toEqual(['MINES']);expect(wordFeedback(answer,'MINES')).toHaveLength(5);expect(s.status).toBe('playing');
+    const second=guessWord(s,'BOOKS');expect(second.error).toBe('');expect(second.state.guesses).toEqual(['MINES','BOOKS']);const session=createSession('wordle','solo',players,{seed:s.seed});session.state=second.state;expect(validData(updateClub(freshData(),session))).toBe(true);
+  });
   it('uses only five-letter words and deterministic independent daily answers',()=>{expect(new Set(answers).size).toBe(answers.length);expect(answers.every(w=>/^[A-Z]{5}$/.test(w))).toBe(true);expect(answerFor('2026-11-13')).toBe(answerFor('2026-11-13'));expect(answers).toContain(answerFor('2026-11-13'));});
   it('allocates exact matches before repeated misplaced letters',()=>{expect(wordFeedback('APPLE','ALLEY')).toEqual(['correct','present','absent','present','absent']);expect(wordFeedback('SHEEP','PEEPS')).toEqual(['present','present','correct','absent','present']);expect(wordFeedback('LEVEL','LEVEL')).toEqual(Array(5).fill('correct'));});
   it('rejects invalid words and duplicates without consuming a turn',()=>{let s=createWordle('test');expect(guessWord(s,'abc').state).toBe(s);expect(guessWord(s,'ZZZZZ').error).toContain('offline');const word=answers.find(w=>w!==answerFor(s.seed));s=guessWord(s,word,2).state;expect(s.turn).toBe(1);expect(guessWord(s,word,2).state).toBe(s);});

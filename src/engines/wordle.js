@@ -12,7 +12,7 @@ export function guessWord(state, input, players=1) {
   const word=input.trim().toUpperCase();
   if(state.status!=='playing') return {state,error:'This word is already finished.'};
   if(!/^[A-Z]{5}$/.test(word)) return {state,error:'Enter five letters.'};
-  if(!vocabulary.has(word)) return {state,error:'Not in our offline word list. Try another word.'};
+  if(!vocabulary.has(word)) return {state,error:'Not in our offline word list. Clear or edit this word and try again.'};
   if(state.guesses.includes(word)) return {state,error:'You already tried that word.'};
   const next={...state,guesses:[...state.guesses,word],turn:(state.turn+1)%players};
   if(word===answerFor(state.seed)) {next.status='complete';next.winner='team';}
