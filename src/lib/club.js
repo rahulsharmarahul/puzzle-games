@@ -1,3 +1,4 @@
+import {numberGames,createNumberGame,validNumberGame} from '../engines/number-games';
 import {createBlocks,validBlocks} from '../engines/blocks';
 import {createFruit,validFruit} from '../engines/fruit';
 import {recordWordleDay,validDay,wordleDays,wordleStreak} from './wordle-streak';
@@ -8,6 +9,9 @@ import { createWordle, guessWord } from '../engines/wordle';
 import { createFlight } from '../engines/flappy';
 import { createGame } from './game';
 export const clubGames = {
+  '2048':{name:'2048',symbol:'2048',tag:'SWIPE. MERGE. REPEAT.',description:'Slide matching tiles together. Reach 2048 and keep growing your score.',modes:'Solo or two-player shared board',online:false},
+  '2248':{name:'2248',symbol:'2248',tag:'CONNECT A BIGGER NUMBER.',description:'Link equal neighbours, then climb through doubles. Turn a little chain into a huge tile.',modes:'Solo or two-player shared board',online:false},
+  flood:{name:'Flood-It',symbol:'F',tag:'ONE BOARD. SIX COLOURS.',description:'Grow a colourful territory from the corner. Can you flood the whole board in 30 moves?',modes:'Solo or two-player shared board',online:false},
   fruit:{name:'Fruit Merge',symbol:'🍉',tag:'DROP. MERGE. GROW.',description:'Drop matching fruit together and grow a watermelon. Keep your fruit jar from overflowing.',modes:'Solo or two-player score challenge',online:false},
   blast:{name:'Block Blast',symbol:'▦',tag:'FIT. CLEAR. COMBO.',description:'Fit colourful pieces on the board. Clear rows and columns and build a bigger score.',modes:'Solo or two-player shared board',online:false},
   ludo:{name:'Ludo',symbol:'⚄',tag:'ROLL. RACE. REACH HOME.',description:'Bring four tokens home. Race friends, capture rivals and find the safe squares.',modes:'Computer or 2–4 players'},
@@ -24,7 +28,7 @@ export const clubGames = {
 export const emptyClub = () => ({sessions:{},history:[],stats:{},daily:{}});
 export function createSession(game,mode,players,{difficulty='easy',size=4,seed=crypto.randomUUID(),daily=null}={}) {
   if(!Object.hasOwn(clubGames,game))throw Error('Unknown game');
-  const state=game==='fruit'?createFruit(seed):game==='blast'?createBlocks(seed):tableGames.includes(game)?createTable(game,players.length,seed):game==='checkers' ? createCheckers() : game==='dots' ? createDots(size) : game==='wordle' ? createWordle(seed) : game==='flappy' ? {flight:createFlight(seed),round:0,scores:[],status:'playing',winner:null} : createGame(game,difficulty,seed);
+  const state=numberGames.includes(game)?createNumberGame(game,seed):game==='fruit'?createFruit(seed):game==='blast'?createBlocks(seed):tableGames.includes(game)?createTable(game,players.length,seed):game==='checkers' ? createCheckers() : game==='dots' ? createDots(size) : game==='wordle' ? createWordle(seed) : game==='flappy' ? {flight:createFlight(seed),round:0,scores:[],status:'playing',winner:null} : createGame(game,difficulty,seed);
   return {id:crypto.randomUUID(),game,mode,players:structuredClone(players),seed,daily,state,turn:0,contributions:Array(players.length).fill(0),created:new Date().toISOString(),status:'playing',winner:null};
 }
 export function updateClub(data,session) {
@@ -40,10 +44,10 @@ export function updateClub(data,session) {
     if(session.winner==='draw')stats.draws++;
     else if(session.winner==='team'||session.winner===0)stats.wins++;
     else stats.losses++;
-    if(['flappy','fruit'].includes(session.game))stats.bestScore=Math.max(stats.bestScore,...session.state.scores);if(session.game==='blast')stats.bestScore=Math.max(stats.bestScore,session.state.score);
-    club.history=[{id:session.id,game:session.game,mode:session.mode,players:session.players.map(p=>p.name),winner:session.winner,date:new Date().toISOString(),daily:session.daily,scores:['flappy','fruit'].includes(session.game) ? session.state.scores : session.game==='blast'?[session.state.score] : session.game==='dots' ? [0,1].map(p=>session.state.boxes.filter(b=>b===p).length) : null},...club.history].slice(0,500);
+    if(['flappy','fruit'].includes(session.game))stats.bestScore=Math.max(stats.bestScore,...session.state.scores);if(['blast',...numberGames].includes(session.game))stats.bestScore=Math.max(stats.bestScore,session.state.score);
+    club.history=[{id:session.id,game:session.game,mode:session.mode,players:session.players.map(p=>p.name),winner:session.winner,date:new Date().toISOString(),daily:session.daily,scores:['flappy','fruit'].includes(session.game) ? session.state.scores : ['blast',...numberGames].includes(session.game)?[session.state.score] : session.game==='dots' ? [0,1].map(p=>session.state.boxes.filter(b=>b===p).length) : null},...club.history].slice(0,500);
   }
-  if(['fruit','blast'].includes(session.game)){club.stats||={};const stats=club.stats[session.game]||={played:0,wins:0,losses:0,draws:0,bestScore:0};stats.bestScore=Math.max(stats.bestScore,session.game==='fruit'?session.state.board.score:session.state.score,...(session.state.scores||[]));}
+  if(['fruit','blast',...numberGames].includes(session.game)){club.stats||={};const stats=club.stats[session.game]||={played:0,wins:0,losses:0,draws:0,bestScore:0};stats.bestScore=Math.max(stats.bestScore,session.game==='fruit'?session.state.board.score:session.state.score,...(session.state.scores||[]));}
   Object.assign(club,recordWordleDay(club,session));
   return {...data,club};
 }
@@ -57,7 +61,7 @@ export function validSession(s,validPuzzle) {
   const st=s.state;
   if(s.daily!==null && (s.game!=='wordle'||!/^wordle-v1:\d{4}-\d{2}-\d{2}$/.test(s.daily)||s.seed!==s.daily))return false;
   if(!st || !['playing','complete'].includes(st.status) || st.status!==s.status || (!['sudoku','petdoku'].includes(s.game)&&st.winner!==s.winner))return false;
-  if(s.game==='fruit')return validFruit(st);if(s.game==='blast')return validBlocks(st);
+  if(numberGames.includes(s.game))return st.game===s.game&&st.seed===s.seed&&validNumberGame(st);if(s.game==='fruit')return validFruit(st);if(s.game==='blast')return validBlocks(st);
   if(tableGames.includes(s.game))return validTable(s.game,st,s.players.length);
   if(['sudoku','petdoku'].includes(s.game)) return s.mode==='local' && st.game===s.game && validPuzzle({...st,status:'playing'});
   if(s.game==='checkers') return Array.isArray(st.board)&&st.board.length===64&&st.board.every((p,i)=>integer(p,-2,2)&&(!p||(Math.floor(i/8)+i%8)%2===1))&&integer(st.turn,0,1)&&(st.forced===null||integer(st.forced,0,63))&&integer(st.quiet,0,1e8)&&st.positions&&typeof st.positions==='object'&&Object.keys(st.positions).length<=1000&&Object.values(st.positions).every(n=>integer(n,1,3));
@@ -75,5 +79,5 @@ export function validClub(club,validPuzzle) {
   if(club?.wordleBest!==undefined&&!integer(club.wordleBest,0,1e8))return false;
   if(club?.daily!==undefined && (!club.daily || typeof club.daily!=='object' || Array.isArray(club.daily) || !Object.entries(club.daily).every(([key,id])=>/^wordle-v1:\d{4}-\d{2}-\d{2}:(solo|local)$/.test(key)&&typeof id==='string'&&id.length<100)))return false;
   if (club?.stats !== undefined && (!club.stats || typeof club.stats!=='object' || Array.isArray(club.stats) || !Object.entries(club.stats).every(([game,s])=>Object.hasOwn(clubGames,game)&&s&&['played','wins','losses','draws','bestScore'].every(k=>integer(s[k],0,1e12))&&s.wins+s.losses+s.draws===s.played)))return false;
-  return club && club.sessions && typeof club.sessions==='object' && !Array.isArray(club.sessions) && Object.entries(club.sessions).every(([key,s])=>s.game===key&&validSession(s,validPuzzle)) && Array.isArray(club.history)&&club.history.length<=500&&club.history.every(h=>h&&typeof h.id==='string'&&Object.hasOwn(clubGames,h.game)&&['solo','local'].includes(h.mode)&&typeof h.date==='string'&&Array.isArray(h.players)&&h.players.length>=2&&h.players.length<=maxPlayers(h.game)&&h.players.every(p=>typeof p==='string'&&p.length<=30)&&(h.winner===null||(['draw','team','lost'].includes(h.winner)||integer(h.winner,0,h.players.length-1)))&&(h.scores===null||Array.isArray(h.scores)&&h.scores.length<=2&&h.scores.every(n=>integer(n,0,1e8))));
+  return club && club.sessions && typeof club.sessions==='object' && !Array.isArray(club.sessions) && Object.entries(club.sessions).every(([key,s])=>s.game===key&&validSession(s,validPuzzle)) && Array.isArray(club.history)&&club.history.length<=500&&club.history.every(h=>h&&typeof h.id==='string'&&Object.hasOwn(clubGames,h.game)&&['solo','local'].includes(h.mode)&&typeof h.date==='string'&&Array.isArray(h.players)&&h.players.length>=2&&h.players.length<=maxPlayers(h.game)&&h.players.every(p=>typeof p==='string'&&p.length<=30)&&(h.winner===null||(['draw','team','lost'].includes(h.winner)||integer(h.winner,0,h.players.length-1)))&&(h.scores===null||Array.isArray(h.scores)&&h.scores.length<=2&&h.scores.every(n=>integer(n,0,1e12))));
 }

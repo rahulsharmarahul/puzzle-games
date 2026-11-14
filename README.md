@@ -14,7 +14,7 @@ In **Family**, create a shared family on one device, then enter its private fami
 
 ## New games and same-device multiplayer
 
-The home page has twelve game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Each arcade game offers solo or same-device play. Ludo, UNO and Trump Tricks support 2-4 players, including three-player family matches; Sea Battle supports two. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
+The home page has fifteen game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Each arcade game offers solo or same-device play. Ludo, UNO and Trump Tricks support 2-4 players, including three-player family matches; Sea Battle supports two. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
 
 | Game | Solo | Same-device multiplayer |
 | --- | --- | --- |
@@ -203,3 +203,14 @@ Wordle's daily streak shows current consecutive winning days, best streak and to
 **Block Blast:** place three fixed-orientation pieces at a time on an 8x8 board. Filled rows/columns clear simultaneously, including intersections. Each placed block scores one point; each cleared line scores 10 times the current consecutive-clear combo. A non-clearing move resets the combo. A new tray appears after all three pieces are used. The run ends when none of the remaining pieces fits. Tap a tray piece and then its top-left board square, or use desktop drag-and-drop and keyboard arrows/Enter. Two-player same-device mode shares the board and score, alternating after each placement.
 
 Both games support favorites, per-profile saves, personal bests, results, backups, Family progress sync and offline play. Their play modes are solo/same-device; the Online rooms menu contains the ten games supported by that service. Artwork is original canvas/CSS plus system fruit emoji.
+
+
+## 2048, 2248 and Flood-It
+
+All three offer solo or two-player cooperative play on one device. Each accepted move passes the turn in cooperative mode. Saves, scores, favourites, backups, offline play and Family progress sync use the existing active-player profile. Family sync transfers progress between devices; these games do not have simultaneous online rooms.
+
+**2048:** slide the 4x4 board with arrow keys, a swipe or the four direction buttons. Matching tiles merge once per move and add their merged value to the score. Invalid moves do not spawn tiles or change turns. Reach 2048 and keep playing, then finish the run or play until there are no legal moves. A completed run counts as a win only if it reached 2048.
+
+**2248:** connect equal neighbouring tiles to start a chain on a 5x8 board. Subsequent tiles may equal or double the previous tile, with diagonals allowed and no reuse. Drag/release, or tap tiles and select Merge chain; keyboard arrows focus tiles and Enter/Space select them. Backtracking during a drag removes the last tile. The chain sum rounds up to a power of two, which is also the score awarded. The result stays at the chain endpoint before gravity; empty spaces refill from above. No power-ups or timers. Finish the run to record the score, or continue until no equal neighbours remain. Rules follow the [number-chain format](https://2248game.com/faq).
+
+**Flood-It:** a six-colour 12x12 board starts at the flagged top-left square. Choose a palette colour to recolour your connected territory and absorb adjacent matching squares. Symbols identify each colour. Cover every square in at most 30 moves to win; winning score is 100 times the unused moves plus 100. Selecting the current colour does not consume a move. New game starts a fresh board.

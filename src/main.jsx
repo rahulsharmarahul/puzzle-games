@@ -26,7 +26,7 @@ const Club = lazy(() => import('./ui/Club'));
 const Online = lazy(() => import('./ui/Online'));
 const Game = lazy(() => import('./ui/Game'));
 const avatars = ['🌿','🐱','🐶','🦊','🐼','🐸','🦋','🌻','🚀','🦉','🐨','🌈'];
-const homeGames=['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea','fruit','blast'];
+const homeGames=['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea','fruit','blast','2048','2248','flood'];
 const names = Object.fromEntries(Object.entries(clubGames).map(([key,game])=>[key,game.name]));
 class GameBoundary extends React.Component {
   state = { failed: false };
