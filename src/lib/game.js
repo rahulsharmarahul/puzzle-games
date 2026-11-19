@@ -2,8 +2,9 @@ import { makePuzzle } from '../engines/puzzles';
 import { sudokuConflicts } from '../engines/sudoku';
 import { petConflicts, petsComplete } from '../engines/petdoku';
 export function createGame(game, difficulty, seed, daily = null) {
-  const puzzle = makePuzzle(game, difficulty, seed);
-  return { id: crypto.randomUUID(), game, difficulty, seed, daily, ...puzzle, board: [...puzzle.givens], notes: {}, undo: [], redo: [], elapsed: 0, accounted: 0, mistakes: 0, hints: 0, status: 'playing' };
+  const upgraded=game==='petdoku'&&difficulty==='expert';
+  const puzzle = makePuzzle(game, difficulty, seed, upgraded?2:1);
+  return { id: crypto.randomUUID(), game, difficulty, seed, daily, ...(upgraded?{puzzleVersion:2}:{}), ...puzzle, board: [...puzzle.givens], notes: {}, undo: [], redo: [], elapsed: 0, accounted: 0, mistakes: 0, hints: 0, status: 'playing' };
 }
 export function conflicts(g) { return g.game === 'sudoku' ? sudokuConflicts(g.board) : petConflicts(g.board, g.regions, g.size); }
 export function complete(g) { return g.game === 'sudoku' ? g.board.every((n, i) => n === g.solution[i]) : petsComplete(g.board, g.regions, g.size); }

@@ -1,10 +1,13 @@
 import catalogue from '../data/catalogue.json';
+import expertPets from '../data/petdoku-expert.json';
 import { hash, random, shuffle, levels } from './random';
 
-export function makePuzzle(game, difficulty, seed) {
+export function makePuzzle(game, difficulty, seed, puzzleVersion=1) {
   if (!['sudoku', 'petdoku'].includes(game) || !levels.includes(difficulty)) throw Error('Unknown puzzle');
-  const rng = random(hash(`v${catalogue.version}:${game}:${difficulty}:${seed}`));
-  const list = catalogue[game][difficulty], item = list[Math.floor(rng() * list.length)];
+  if(![1,2].includes(puzzleVersion)||puzzleVersion===2&&(game!=='petdoku'||difficulty!=='expert'))throw Error('Unsupported puzzle edition');
+  const upgraded=puzzleVersion===2;
+  const rng = random(hash(`v${upgraded?2:catalogue.version}:${game}:${difficulty}:${seed}`));
+  const list = upgraded?expertPets.puzzles:catalogue[game][difficulty], item = list[Math.floor(rng() * list.length)];
   if (game === 'sudoku') {
     const digits = [0, ...shuffle([1,2,3,4,5,6,7,8,9], rng)];
     const transpose = rng() < .5;
@@ -20,4 +23,4 @@ export function makePuzzle(game, difficulty, seed) {
   return { size: n, regions, solution: item.solution.map(map).sort((a,b) => a-b), givens: Array(n*n).fill(0) };
 }
 export function localDate(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
-export function dailyKey(game, difficulty, date = localDate()) { return `v${catalogue.version}:${date}:${game}:${difficulty}`; }
+export function dailyKey(game, difficulty, date = localDate()) { return `v${game==='petdoku'&&difficulty==='expert'?2:catalogue.version}:${date}:${game}:${difficulty}`; }

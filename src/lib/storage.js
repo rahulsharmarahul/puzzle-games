@@ -43,7 +43,8 @@ export function metadata() {
 export function validSave(g) {
   try {
     if (!g || !['sudoku','petdoku'].includes(g.game) || !levels.includes(g.difficulty) || typeof g.seed !== 'string' || typeof g.id !== 'string' || g.status !== 'playing') return false;
-    const expected = makePuzzle(g.game, g.difficulty, g.seed);
+    if(g.puzzleVersion!==undefined&&!(g.game==='petdoku'&&g.difficulty==='expert'&&[1,2].includes(g.puzzleVersion)))return false;
+    const expected = makePuzzle(g.game, g.difficulty, g.seed,g.puzzleVersion||1);
     if (['size','givens','solution', ...(g.game === 'petdoku' ? ['regions'] : [])].some(k => JSON.stringify(g[k]) !== JSON.stringify(expected[k]))) return false;
     const max = g.game === 'sudoku' ? 9 : 2;
     const boardOK = b => Array.isArray(b) && b.length === g.size ** 2 && b.every((n,i) => Number.isInteger(n) && n >= 0 && n <= max && (!g.givens[i] || n === g.givens[i]));
