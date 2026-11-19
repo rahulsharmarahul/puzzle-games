@@ -18,6 +18,7 @@ import './appearance.css';
 import './enhancements.css';
 import './drop-games.css';
 import './game-artwork.css';
+import './phone-play.css';
 import ThemePicker from './ui/ThemePicker';
 import {normalizeSettings,applyTheme,nextTheme} from './lib/themes';
 import { clubGames, updateClub } from './lib/club';

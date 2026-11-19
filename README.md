@@ -242,3 +242,16 @@ Wordle also supports the phone's native keyboard: tap **Type your guess**, type 
 Use **Reveal a letter** for up to three optional hints per word. Each hint reveals a correct letter and its numbered position, skipping positions already solved in submitted guesses or earlier hints. Revealed positions stay in a separate clue row; your draft word is preserved. A hint never submits a word, uses a guess or passes the cooperative turn. If all positions are known, hints stop. Hint use is visible for the rest of the round, including after completion, and assisted daily wins still count towards the existing streak.
 
 Hints persist with the saved game, offline use, profile backups and Family progress sync. Online Wordle shares the same three-hint budget between players; only the current connected, unpaused player may request a hint. The server reveals only the requested positions and keeps the complete answer and seed private until the match ends. Existing saves without hint records remain valid.
+
+
+## Phone play
+
+Game screens prioritize the board on phones: compact headings and scores, collapsible How to play guides with an always-visible gesture tip, larger action controls, safe-area spacing above the bottom navigation and a horizontal Petdoku pet strip. Desktop rules start expanded. Sudoku/Petdoku keep their input tools and number pad near the bottom of the game panel while scrolling. Wordle keeps its three-colour legend, native keyboard and hints in a more compact layout. Fruit Merge and Flappy play areas scale with the phone's available height; Flappy also starts/resumes when the ready overlay is tapped.
+
+Sudoku, Petdoku, Checkers, Dots and Boxes, Sea Battle and Arrow Escape have **Enlarge board** / **Fit board** controls. Enlarged grids pan inside their own scroll area and do not widen the page. Sea Battle's enlarged view supports panning and precise taps using the selected orientation; normal-size fleet placement additionally supports drag-to-orient. Keyboard and alternative controls remain available.
+
+**Block Blast:** drag a tray piece with a finger or pen onto the board, check the highlighted footprint and release to place. Cancelling or releasing outside the board does not place a piece. Tap-to-select/tap-to-place and desktop drag-and-drop still work.
+
+**Sea Battle:** start on a square and drag horizontally or vertically to preview and place the next ship. Dragging left/up anchors the ship's head appropriately. Red preview means blocked/out of bounds; invalid placements retain the existing error feedback. Tap placement, orientation selection, auto-placement, fleet confirmation and direct target shots remain available.
+
+**UNO and Trump:** large cards form a horizontally scrolling hand rather than many wrapped rows. Legal cards are emphasized. UNO's draw deck is directly tappable and four large colour swatches replace the wild-colour dropdown. Existing card rules, private handoff screens, UNO calls and draw/pass rules are retained. The same components serve solo, same-device and online play; this update changes no saved-game or server-action formats.

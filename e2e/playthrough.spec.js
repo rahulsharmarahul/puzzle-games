@@ -64,7 +64,7 @@ test('play three-player UNO through drawing, wild colours, calling UNO and winni
   for(let move=0;move<1500&&!await page.locator('.match-result').count();move++){
     await reveal(page);const call=page.getByRole('button',{name:'Say UNO',exact:true});if(await call.count()&&await call.isEnabled()){await call.click();continue;}
     const cards=page.getByRole('group',{name:'Your UNO hand'}).locator('button:not(:disabled)');if(await cards.count()){
-      const card=cards.first();if((await card.getAttribute('aria-label')).includes('wild')){const hand=await page.getByRole('group',{name:'Your UNO hand'}).getByRole('button').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label')));const color=['red','blue','green','yellow'].sort((a,b)=>hand.filter(t=>t.includes(b)).length-hand.filter(t=>t.includes(a)).length)[0];await page.getByRole('combobox',{name:'Wild card colour',exact:true}).selectOption(color);}await card.click();
+      const card=cards.first();if((await card.getAttribute('aria-label')).includes('wild')){const hand=await page.getByRole('group',{name:'Your UNO hand'}).getByRole('button').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label')));const color=['red','blue','green','yellow'].sort((a,b)=>hand.filter(t=>t.includes(b)).length-hand.filter(t=>t.includes(a)).length)[0];await page.getByRole('button',{name:`Use ${color} for wild cards`,exact:true}).click();}await card.click();
     }else{const pass=page.getByRole('button',{name:'Pass drawn card',exact:true});if(await pass.isEnabled())await pass.click();else await page.getByRole('button',{name:'Draw one card',exact:true}).click();}
   }
   await result(page);

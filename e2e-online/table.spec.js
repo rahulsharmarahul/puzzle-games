@@ -3,12 +3,12 @@ const web=process.env.ONLINE_WEB||'http://localhost:4173/puzzle-games/',service=
 async function group(browser,game,count){
   const clients=[];
   for(let i=0;i<count;i++){
-    const context=await browser.newContext();await context.addInitScript(({service,i})=>{localStorage.setItem('pz:online-config',JSON.stringify({endpoint:service}));localStorage.setItem('pz:profiles',JSON.stringify({version:1,data:{familyPreset:true,active:'p'+i,profiles:[{id:'p'+i,name:'Player '+i,avatar:'X'}]}}));},{service,i});
+    const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await context.addInitScript(({service,i})=>{localStorage.setItem('pz:online-config',JSON.stringify({endpoint:service}));localStorage.setItem('pz:profiles',JSON.stringify({version:1,data:{familyPreset:true,active:'p'+i,profiles:[{id:'p'+i,name:'Player '+i,avatar:'X'}]}}));},{service,i});
     const page=await context.newPage(),c={context,page,room:null,frames:[]};page.on('websocket',ws=>ws.on('framereceived',e=>{try{const f=JSON.parse(String(e.payload));c.frames.push(f);if(f.type==='state')c.room=f.room;}catch{}}));clients.push(c);
     if(i===0){await page.goto(web+'#online');await page.getByRole('combobox',{name:'Online game',exact:true}).selectOption(game);if(game!=='sea')await page.getByRole('combobox',{name:'Number of players',exact:true}).selectOption(String(count));await page.getByRole('button',{name:'Create room',exact:true}).click();await expect(page.locator('.room-code')).toBeVisible();}
     else{const code=(await clients[0].page.locator('.room-code').textContent()).trim();await page.goto(web+'#online/'+code);await page.getByRole('button',{name:'Join room',exact:true}).click();await expect(page.locator('.room-code')).toBeVisible();}
   }
-  for(const c of clients)await expect.poll(()=>c.room?.presence.every(Boolean)).toBe(true);
+  for(const c of clients){await expect.poll(()=>c.room?.presence.every(Boolean)).toBe(true);expect(await c.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
   return clients;
 }
 async function revision(clients,n){for(const c of clients)await expect.poll(()=>c.room?.revision).toBe(n);}
