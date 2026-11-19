@@ -24,6 +24,7 @@ for(const game of ['ludo','uno','trump'])test(`three devices play ${game} with r
   else if(game==='uno')await a.page.getByRole('button',{name:'Draw one card',exact:true}).click();
   else await a.page.getByRole('group',{name:'Your Trump hand'}).locator('button:not(:disabled)').first().click();
   await revision(clients,before+1);
+  if(game==='ludo'){expect(a.room.state.lastDie).toBeGreaterThanOrEqual(1);await expect(a.page.locator('.ludo-centre-die .sr-only')).toHaveText('Last roll: '+a.room.state.lastDie);}
   // Seat three survives refresh; reconnect snapshots still contain only its own hand.
   const hand=c.room.state.hand;c.room=null;await c.page.reload();await expect.poll(()=>c.room?.presence.every(Boolean)).toBe(true);await expect(c.page.getByText('Your seat: 3',{exact:false})).toBeVisible();if(hand)expect(c.room.state.hand).toEqual(hand);
   if(game==='trump')for(let n=1;n<21;n++){const current=clients[a.room.turn];before=a.room.revision;await current.page.getByRole('group',{name:'Your Trump hand'}).locator('button:not(:disabled)').first().click();await revision(clients,before+1);}

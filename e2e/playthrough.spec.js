@@ -55,7 +55,7 @@ test('play Checkers through captures, promotions and a final result',async({page
 test('play three-player Ludo until all four winning tokens reach home',async({page})=>{
   await club(page,'ludo',3);
   for(let move=0;move<4000&&!await page.locator('.match-result').count();move++){
-    const roll=page.getByRole('button',{name:'Roll dice',exact:true});if(await roll.isEnabled())await roll.click();else{const options=page.locator('.token-actions button:not(:disabled)');expect(await options.count()).toBeGreaterThan(0);await options.first().click();}
+    const roll=page.getByRole('button',{name:'Roll dice',exact:true});if(await roll.isEnabled())await roll.click();else{const options=page.locator('.ludo-token-hit.can-move:not(:disabled)');expect(await options.count()).toBeGreaterThan(0);await options.first().click();const stack=page.getByRole('group',{name:'Choose a token from this stack'});if(await stack.count())await stack.getByRole('button',{name:/^Token /}).first().click();}
   }
   await result(page);
 });
