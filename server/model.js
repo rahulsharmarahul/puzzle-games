@@ -1,6 +1,6 @@
 import { createCheckers, moveChecker } from '../src/engines/checkers.js';
 import { createDots, drawEdge } from '../src/engines/dots.js';
-import { createWordle, guessWord, answerFor, wordFeedback } from '../src/engines/wordle.js';
+import { createWordle, guessWord, answerFor, wordFeedback, hintWord } from '../src/engines/wordle.js';
 import { createGame, act, complete, formatTime } from '../src/lib/game.js';
 import { petExclusions } from '../src/engines/petdoku.js';
 import { createFlight, stepFlight, flight } from '../src/engines/flappy.js';
@@ -36,7 +36,7 @@ export function clockRoom(room,connected,now=Date.now()) {
 export function publicRoom(room,presence=room.players.map(()=>false),now=Date.now(),seat=null) {
   const m=room.match;let state;
   if(tableGames.includes(room.game))state=tableView(room.game,m,seat);
-  else if(room.game==='wordle')state={guesses:m.guesses,feedback:m.guesses.map(w=>wordFeedback(answerFor(m.seed),w)),turn:m.turn,status:m.status,winner:m.winner,...(m.status==='complete'?{answer:answerFor(m.seed)}:{})};
+  else if(room.game==='wordle')state={guesses:m.guesses,hints:m.hints||[],feedback:m.guesses.map(w=>wordFeedback(answerFor(m.seed),w)),turn:m.turn,status:m.status,winner:m.winner,...(m.status==='complete'?{answer:answerFor(m.seed)}:{})};
   else if(['sudoku','petdoku'].includes(room.game))state={size:m.size,difficulty:m.difficulty,givens:m.givens,board:m.board,notes:m.notes,mistakes:m.mistakes,hints:m.hints,canUndo:m.undo.length>0,canRedo:m.redo.length>0,status:m.status,invalid:m.board.flatMap((v,i)=>v&&(room.game==='sudoku'?v!==m.solution[i]:v===2&&!m.solution.includes(i))?[i]:[]),...(room.game==='petdoku'?{regions:m.regions,excluded:[...petExclusions(m.board,m.regions,m.size,m.solution)],correctPets:m.solution.filter(i=>m.board[i]===2)}:{})};
   else if(room.game==='checkers'){const {positions,...rest}=m;state=rest;}
   else if(room.game==='flappy')state={...m,course:room.seed,maxTicks:MAX_FLIGHT_TICKS};
@@ -87,6 +87,7 @@ export function applyRoomAction(room, seat, message, connected=true, now=Date.no
     }
     else if(room.game==='checkers'&&action.type==='checker')next=moveChecker(room.match,action.from,action.to);
     else if(room.game==='dots'&&action.type==='edge')next=drawEdge(room.match,action.axis,action.index);
+    else if(room.game==='wordle'&&action.type==='wordle-hint'){const result=hintWord(room.match);if(result.error)throw Error(result.error);next=result.state;}
     else if(room.game==='wordle'&&action.type==='guess') {
       if(typeof action.word!=='string'||action.word.length>20)throw Error('Enter a five-letter word.');
       const result=guessWord(room.match,action.word,2);if(result.error)throw Error(result.error);next=result.state;

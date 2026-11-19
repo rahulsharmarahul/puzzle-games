@@ -6,7 +6,7 @@ import {recordWordleDay,validDay,wordleDays,wordleStreak} from './wordle-streak'
 import {tableGames,createTable,maxPlayers,validTable} from '../engines/table';
 import { createCheckers } from '../engines/checkers';
 import { createDots } from '../engines/dots';
-import { createWordle, guessWord } from '../engines/wordle';
+import { createWordle, guessWord, validWordleHints } from '../engines/wordle';
 import { createFlight } from '../engines/flappy';
 import { createGame } from './game';
 export const clubGames = {
@@ -69,10 +69,10 @@ export function validSession(s,validPuzzle) {
   if(s.game==='checkers') return Array.isArray(st.board)&&st.board.length===64&&st.board.every((p,i)=>integer(p,-2,2)&&(!p||(Math.floor(i/8)+i%8)%2===1))&&integer(st.turn,0,1)&&(st.forced===null||integer(st.forced,0,63))&&integer(st.quiet,0,1e8)&&st.positions&&typeof st.positions==='object'&&Object.keys(st.positions).length<=1000&&Object.values(st.positions).every(n=>integer(n,1,3));
   if(s.game==='dots')return integer(st.size,2,6)&&['h','v','boxes'].every(k=>Array.isArray(st[k])&&st[k].length===(k==='boxes'?st.size**2:st.size*(st.size+1))&&st[k].every(v=>integer(v,-1,1)))&&integer(st.turn,0,1);
   if(s.game==='wordle') {
-    if(st.seed!==s.seed||!Array.isArray(st.guesses)||st.guesses.length>6)return false;
+    if(!validWordleHints(st)||st.seed!==s.seed||!Array.isArray(st.guesses)||st.guesses.length>6)return false;
     let replay=createWordle(st.seed);
     for(const guess of st.guesses){if(typeof guess!=='string')return false;const result=guessWord(replay,guess,s.mode==='local'?2:1);if(result.error)return false;replay=result.state;}
-    return JSON.stringify(st)===JSON.stringify(replay);
+    const {hints,...plain}=st;return JSON.stringify(plain)===JSON.stringify(replay);
   }
   return validFlight(st.flight)&&integer(st.round,0,1)&&Array.isArray(st.scores)&&st.scores.length<=2&&st.scores.every(n=>integer(n,0,1e8));
 }

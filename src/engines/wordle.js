@@ -8,6 +8,19 @@ export function wordFeedback(answer, guess) {
   return out;
 }
 export function createWordle(seed) { return {seed,guesses:[],turn:0,status:'playing',winner:null}; }
+export const WORDLE_HINT_LIMIT=3;
+export function hintWord(state){
+  if(state.status!=='playing')return {state,error:'This word is already finished.'};
+  const hints=state.hints||[],answer=answerFor(state.seed);
+  if(hints.length>=WORDLE_HINT_LIMIT)return {state,error:'All three hints have been used.'};
+  const position=[0,1,2,3,4].find(i=>!hints.some(h=>h.position===i)&&!state.guesses.some(word=>word[i]===answer[i]));
+  if(position===undefined)return {state,error:'You already know every position. Use your clues to finish the word.'};
+  return {state:{...state,hints:[...hints,{position,letter:answer[position]}]},error:''};
+}
+export function validWordleHints(state){
+  const hints=state.hints;
+  return hints===undefined||Array.isArray(hints)&&hints.length<=WORDLE_HINT_LIMIT&&new Set(hints.map(h=>h?.position)).size===hints.length&&hints.every(h=>h&&Object.keys(h).length===2&&Number.isInteger(h.position)&&h.position>=0&&h.position<5&&h.letter===answerFor(state.seed)[h.position]);
+}
 export function guessWord(state, input, players=1) {
   const word=input.trim().toUpperCase();
   if(state.status!=='playing') return {state,error:'This word is already finished.'};
