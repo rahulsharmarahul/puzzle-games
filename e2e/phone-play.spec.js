@@ -11,9 +11,9 @@ async function dragTouch(page,from,to,cancel=false){
   await session.send('Input.dispatchTouchEvent',{type:cancel?'touchCancel':'touchEnd',touchPoints:[]});await session.detach();
 }
 const centre=box=>({x:box.x+box.width/2,y:box.y+box.height/2});
-test('all sixteen games fit narrow phones with compact rules and usable controls',async({page})=>{
+test('all seventeen games fit narrow phones with compact rules and usable controls',async({page})=>{
   test.setTimeout(120000);
-  for(const game of ['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea','fruit','blast','2048','2248','flood','arrows']){
+  for(const game of ['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea','fruit','blast','2048','2248','flood','arrows','untangle']){
     await start(page,game);await expect(page.locator('main')).toBeVisible();
     for(const width of [320,390]){await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),game+' should fit '+width).toBe(true);}
     const guide=page.locator('.game-guide').first();if(await guide.count()){await expect(guide).not.toHaveAttribute('open','');await guide.locator('summary').tap();await expect(guide).toHaveAttribute('open','');await guide.locator('summary').tap();}

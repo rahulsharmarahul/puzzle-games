@@ -1,5 +1,5 @@
 // Per-installation grow-only counters: merging a synced copy never adds it twice.
-export const screenGames=['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea','fruit','blast','2048','2248','flood','arrows'];
+export const screenGames=['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea','fruit','blast','2048','2248','flood','arrows','untangle'];
 export const emptyScreenTime=()=>({version:1,sources:{}});
 const object=x=>x&&typeof x==='object'&&!Array.isArray(x);
 const counter=x=>Number.isSafeInteger(x)&&x>=0&&x<=1e13;

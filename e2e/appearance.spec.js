@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 test('compact home removes the banner and shows four games in each desktop row',async({page})=>{
-  await page.setViewportSize({width:1440,height:1000});await page.goto('./');await expect(page.locator('.hero')).toHaveCount(0);await expect(page.locator('.game-cards>.game-card')).toHaveCount(16);
+  await page.setViewportSize({width:1440,height:1000});await page.goto('./');await expect(page.locator('.hero')).toHaveCount(0);await expect(page.locator('.game-cards>.game-card')).toHaveCount(17);
   const cards=await page.locator('.game-cards>.game-card').evaluateAll(cards=>cards.map(c=>({top:c.getBoundingClientRect().top,height:c.getBoundingClientRect().height})));
   expect(cards.slice(0,4).every(c=>c.top===cards[0].top)).toBe(true);expect(cards[4].top).toBeGreaterThan(cards[0].top);expect(Math.max(...cards.map(c=>c.height))).toBeLessThan(380);
   await page.screenshot({path:'test-results/home-compact-desktop.png',fullPage:true});

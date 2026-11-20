@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-const original=['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea','fruit','blast','2048','2248','flood','arrows'];
+const original=['sudoku','petdoku','flappy','wordle','checkers','dots','ludo','uno','trump','sea','fruit','blast','2048','2248','flood','arrows','untangle'];
 const order=page=>page.locator('.game-cards>.game-card').evaluateAll(cards=>cards.map(c=>c.dataset.game));
 test('favorites move first, retain every other game, survive refresh and can be removed',async({page})=>{
   await page.goto('./');expect(await order(page)).toEqual(original);

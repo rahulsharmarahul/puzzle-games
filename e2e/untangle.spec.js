@@ -1,0 +1,24 @@
+﻿import {test,expect} from '@playwright/test';
+test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+async function saved(page){return page.evaluate(()=>{const m=JSON.parse(localStorage.getItem('pz:profiles')).data;return JSON.parse(localStorage.getItem('pz:player:'+m.active)).data;});}
+async function touch(page,from,to,cancel=false){const c=await page.context().newCDPSession(page);await c.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[from]});for(let i=1;i<=8;i++)await c.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:from.x+(to.x-from.x)*i/8,y:from.y+(to.y-from.y)*i/8}]});await c.send('Input.dispatchTouchEvent',{type:cancel?'touchCancel':'touchEnd',touchPoints:[]});await c.detach();}
+async function move(page,id,p,cancel=false){const board=page.locator('.untangle-stage');await board.scrollIntoViewIfNeeded();const box=await board.boundingBox(),node=await page.locator(`.untangle-point[data-point="${id}"]`).boundingBox();await touch(page,{x:node.x+node.width/2,y:node.y+node.height/2},{x:box.x+p.x/400*box.width,y:box.y+p.y/400*box.height},cancel);}
+test('touch dragging saves, cancels, alternates turns, undoes and resumes',async({page})=>{
+ await page.goto('./#club/untangle');await page.getByRole('combobox',{name:'Play mode',exact:true}).selectOption('local');await page.getByRole('button',{name:'Start game',exact:true}).tap();await expect(page.locator('.untangle-point')).toHaveCount(6);
+ await move(page,0,{x:200,y:200},true);expect((await saved(page)).club.sessions.untangle.state.moves).toBe(0);
+ await move(page,0,{x:200,y:200});await expect(page.locator('.current-turn')).toContainText('Neha');expect((await saved(page)).club.sessions.untangle.state.moves).toBe(1);
+ await page.getByRole('button',{name:'Undo move',exact:true}).tap();expect((await saved(page)).club.sessions.untangle.state.moves).toBe(2);await expect(page.locator('.current-turn')).toContainText('Rahul');
+ const before=(await saved(page)).club.sessions.untangle.state;await page.reload();expect((await saved(page)).club.sessions.untangle.state).toEqual(before);
+ await page.locator('.untangle-point').first().tap();await expect(page.locator('.untangle-message')).toContainText('selected');const box=await page.locator('.untangle-stage').boundingBox();await page.touchscreen.tap(box.x+box.width/2,box.y+box.height/2);expect((await saved(page)).club.sessions.untangle.state.moves).toBe(3);
+});
+test('hint-guided touch play completes and saves one result',async({page})=>{
+ test.setTimeout(90000);await page.goto('./#club/untangle');await page.getByRole('button',{name:'Start game',exact:true}).tap();
+ for(let k=0;k<80&&!await page.locator('.match-result').count();k++){
+  await page.getByRole('button',{name:'Show a hint',exact:true}).tap();const hint=await page.locator('.untangle-hint-target').evaluate(el=>({id:+el.dataset.point,x:+el.dataset.x,y:+el.dataset.y}));const points=await page.locator('.untangle-point').evaluateAll(nodes=>nodes.map(el=>({id:+el.dataset.point,x:+el.dataset.x,y:+el.dataset.y})));const blocker=points.find(p=>p.id!==hint.id&&Math.hypot(p.x-hint.x,p.y-hint.y)<32);
+  if(blocker){let spare;for(let x=36;x<365&&!spare;x+=45)for(let y=36;y<365&&!spare;y+=45)if(Math.hypot(x-hint.x,y-hint.y)>36&&points.every(p=>p.id===blocker.id||Math.hypot(x-p.x,y-p.y)>36))spare={x,y};expect(spare).toBeDefined();await move(page,blocker.id,spare);}else await move(page,hint.id,hint);
+ }
+ await expect(page.locator('.match-result')).toContainText('Untangled');expect((await saved(page)).club.stats.untangle.played).toBe(1);await page.reload();expect((await saved(page)).club.history.filter(h=>h.game==='untangle')).toHaveLength(1);
+});
+test('favorites, offline keyboard play and narrow phone layout',async({page,context})=>{
+ await page.goto('./');await page.evaluate(async()=>navigator.serviceWorker.ready);await page.reload();await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await page.getByRole('button',{name:'Add Untangle to favorites',exact:true}).tap();await expect(page.locator('.game-cards>.game-card').first()).toHaveAttribute('data-game','untangle');await context.setOffline(true);await page.goto('./#club/untangle');await page.getByRole('combobox',{name:'Untangle difficulty'}).selectOption('expert');await page.getByRole('button',{name:'Start game',exact:true}).tap();await expect(page.locator('.untangle-point')).toHaveCount(16);await page.setViewportSize({width:320,height:740});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.locator('.untangle-point').first().focus();await page.keyboard.press('ArrowRight');expect((await saved(page)).club.sessions.untangle.state.moves).toBe(1);await page.reload();expect((await saved(page)).club.sessions.untangle.state.moves).toBe(1);await context.setOffline(false);
+});
