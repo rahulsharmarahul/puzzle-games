@@ -14,7 +14,7 @@ In **Family**, create a shared family on one device, then enter its private fami
 
 ## New games and same-device multiplayer
 
-The home page has seventeen game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Each arcade game offers solo or same-device play. Ludo, UNO and Trump Tricks support 2-4 players, including three-player family matches; Sea Battle supports two. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
+The home page has twenty game cards. Sudoku and Petdoku keep their existing solo flow and add **Play together · Same device**. Each arcade game offers solo or same-device play. Ludo, UNO and Trump Tricks support 2-4 players, including three-player family matches; Sea Battle supports two. Choose another family profile or enter a guest name. Player one is the active profile; all shared results belong to that hosting profile. These modes use one device. For different devices, use Online rooms as described above.
 
 | Game | Solo | Same-device multiplayer |
 | --- | --- | --- |
@@ -220,7 +220,7 @@ All three offer solo or two-player cooperative play on one device. Each accepted
 
 New devices start with Rahul, Neha and Aparna. Existing unlinked devices add any missing names once, preserving original profiles, IDs and saves. Matching names are compared without case or outer whitespace; deleted preset profiles stay deleted. An already linked family keeps its canonical roster. Choose your own player before playing. Use Family > Create shared family on one device, then join its private code on other devices to share these player IDs and their records.
 
-Family and Statistics show a screen-time dashboard: per-player totals and a breakdown across all seventeen games, for Today, Last 7 days or All time. Tracking starts with this update. It counts a visible, focused game board, including thinking, waiting-for-a-turn and pause time. Home, setup, family/statistics/settings pages, completed games and background tabs do not count. A same-device match belongs to the selected host profile; guests and partners are not timed independently. Each online player tracks their own device/profile. This measures game screen time, separately from puzzle solve timers.
+Family and Statistics show a screen-time dashboard: per-player totals and a breakdown across all twenty games, for Today, Last 7 days or All time. Tracking starts with this update. It counts a visible, focused game board, including thinking, waiting-for-a-turn and pause time. Home, setup, family/statistics/settings pages, completed games and background tabs do not count. A same-device match belongs to the selected host profile; guests and partners are not timed independently. Each online player tracks their own device/profile. This measures game screen time, separately from puzzle solve timers.
 
 A monotonic clock measures elapsed time and the device's local calendar assigns dates, including splitting activity at midnight. Checkpoints run every five seconds and on route/profile changes, focus/visibility changes, page exit and backup export; abrupt process termination can lose up to the last checkpoint. Per-installation grow-only counters combine by maximum, while distinct devices add together. Repeated syncs and backup imports do not multiply existing records. Concurrent devices' foreground use adds together. All-time game totals remain; daily detail keeps the latest ninety dates per installation. At most 100 installation records fit a profile; the server retains the existing 2 MB sync payload limit.
 
@@ -271,3 +271,11 @@ The checked-in src/data/petdoku-expert.json is generated offline using `node scr
 Arrow Escape now uses original top-down car sprites with wheels, windows, headlights and numbered roofs, plus a matching home-page icon. The direction is marked by the headlights. Existing puzzle footprints, hints, scores, favorites and saved progress are retained; only the presentation and instructions changed.
 
 **Untangle:** drag numbered points until no lines cross. Red lines cross; teal lines are clear. Four difficulty levels (6/9/12/16 points), touch dragging or tap-point/tap-destination, keyboard arrows (Shift for precision), undo and optional target hints. Each move passes the turn in same-device cooperative mode. Progress, completion scores, favourites and screen time are saved per profile and included in family sync. Any crossing-free layout wins; hints show one possible solution.
+
+**Gravity Maze:** swipe or use arrows to tilt gravity. Roll until a wall stops the ball, avoid holes and stop on the green goal. Easy/medium/hard mazes have a guaranteed safe route, optional hints and undo.
+
+**Rope Cut:** tap a numbered cut button or swipe across a rope. Swing the treat around a central platform, collect stars and time the last cut to feed the pet. Retry a missed attempt; each retry reduces the final score. Three difficulty levels narrow the goal.
+
+**Bricks:** drag the paddle or use its slider / keyboard arrows. Tap the board or Launch ball to serve. Break every brick with three lives; hard mode includes reinforced bricks. Cooperative players switch when a life is lost.
+
+All three physics games support solo and same-device cooperative play, saved progress, favourites, statistics and screen time. Rope Cut and Bricks pause when hidden or navigated away from; resume manually. They use fixed simulation steps for consistent physics and are available offline after caching. Family sync includes their saves and totals; online rooms are not used for these games.

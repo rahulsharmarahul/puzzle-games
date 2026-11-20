@@ -51,3 +51,15 @@ test('old local progress can be copied to a shared player, including arcade sess
   await b.page.getByText('Copy existing device progress to a shared player',{exact:true}).click();await b.page.getByRole('combobox',{name:'Local player to copy',exact:true}).selectOption('Guest');await b.page.getByRole('combobox',{name:'Shared player destination',exact:true}).selectOption('Alex');b.page.once('dialog',d=>d.accept());await b.page.getByRole('button',{name:'Copy progress and sync',exact:true}).click();await expect.poll(async()=>(await data(a.page,'Alex'))?.club?.sessions.checkers?.game,{timeout:20000}).toBe('checkers');expect((await data(b.page,'Guest')).club.sessions.checkers.game).toBe('checkers');
   await a.page.goto(web+'#club/dots');await a.page.getByRole('button',{name:'Start game',exact:true}).click();await a.page.getByRole('button',{name:'Horizontal edge 1',exact:true}).click();await sync(a.page);await expect.poll(async()=>(await data(b.page,'Alex'))?.club?.sessions.dots?.state.h[0],{timeout:20000}).toBe(0);await a.context.close();await b.context.close();
 });
+
+test('physics game progress synchronizes between family devices',async({browser})=>{
+ test.setTimeout(90000);const a=await device(browser,'PhysicsHost'),b=await device(browser,'PhysicsGuest');
+ await a.page.getByRole('button',{name:'Create shared family',exact:true}).click();await sync(a.page);const code=(await a.page.locator('.family-code').textContent()).replaceAll('-','');await b.page.getByRole('textbox',{name:'Family code',exact:true}).fill(code);await b.page.getByRole('button',{name:'Join shared family',exact:true}).click();await sync(b.page);await choose(b.page,'PhysicsHost');const id=await a.page.evaluate(()=>JSON.parse(localStorage.getItem('pz:profiles')).data.active);
+ for(const game of ['gravity','rope','bricks']){
+  await a.page.goto(web+'#club/'+game);await a.page.getByRole('button',{name:'Start game',exact:true}).click();
+  if(game==='gravity'){await a.page.getByRole('button',{name:'Maze hint',exact:true}).click();await a.page.locator('.physics-hint').click();}
+  else{await a.page.getByRole('button',{name:game==='rope'?'Cut rope 1':'Launch ball',exact:true}).click();await a.page.waitForTimeout(350);await a.page.getByRole('button',{name:'Pause game',exact:true}).click();}
+  const state=(await data(a.page,id)).club.sessions[game].state;await sync(a.page);await expect.poll(async()=>(await data(b.page,id))?.club?.sessions[game]?.state,{timeout:20000}).toEqual(state);
+ }
+ await a.context.close();await b.context.close();
+});
