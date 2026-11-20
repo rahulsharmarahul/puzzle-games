@@ -10,7 +10,7 @@ import { createWordle, guessWord, validWordleHints } from '../engines/wordle';
 import { createFlight } from '../engines/flappy';
 import { createGame } from './game';
 export const clubGames = {
-  arrows:{name:'Arrow Escape',symbol:'↗',tag:'UNTANGLE. TAP. ESCAPE.',description:'Follow each arrow to freedom. Clear the paths and untangle a colourful logic puzzle.',modes:'Solo or two-player shared board',online:false},
+  arrows:{name:'Arrow Escape',symbol:'🚗',tag:'CLEAR THE TRAFFIC.',description:'Tap colourful cars to drive them out. Clear blocked roads and free the whole parking lot.',modes:'Solo or two-player shared board',online:false},
   '2048':{name:'2048',symbol:'2048',tag:'SWIPE. MERGE. REPEAT.',description:'Slide matching tiles together. Reach 2048 and keep growing your score.',modes:'Solo or two-player shared board',online:false},
   '2248':{name:'2248',symbol:'2248',tag:'CONNECT A BIGGER NUMBER.',description:'Link equal neighbours, then climb through doubles. Turn a little chain into a huge tile.',modes:'Solo or two-player shared board',online:false},
   flood:{name:'Flood-It',symbol:'F',tag:'ONE BOARD. SIX COLOURS.',description:'Grow a colourful territory from the corner. Can you flood the whole board in 30 moves?',modes:'Solo or two-player shared board',online:false},
